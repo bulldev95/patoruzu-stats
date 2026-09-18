@@ -41,7 +41,7 @@ def parse_team_sheet(pdf_path: str) -> dict:
             _, number, name, personal_id = m.groups()
             players.append({
                 "number": int(number),
-                "name": name.strip(),
+                "name": name.strip().replace("`", "ffi"),  # PDF ligature artifact (ffi → `)
                 "personal_id": personal_id,
             })
 
