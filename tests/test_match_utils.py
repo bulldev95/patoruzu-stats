@@ -44,8 +44,7 @@ class TestCalculateMinute:
 
 
 class TestGetActivePlayers:
-    def test_returns_only_players_without_minute_out(self, db, sample_match):
-        # Set minute_out on player #1
+    def test_excludes_starters_with_minute_out(self, db, sample_match):
         mp = db.query(MatchPlayer).filter_by(match_id=sample_match.id, number=1).first()
         mp.minute_out = 30
         db.commit()
@@ -55,9 +54,14 @@ class TestGetActivePlayers:
         assert 1 not in numbers
         assert 2 in numbers
 
-    def test_returns_all_when_none_substituted(self, db, sample_match):
+    def test_excludes_bench_players(self, db, sample_match):
         active = get_active_players(sample_match.id, db)
-        assert len(active) == 23
+        numbers = [mp.number for mp, _ in active]
+        assert all(n <= 15 for n in numbers)
+
+    def test_returns_only_starters_initially(self, db, sample_match):
+        active = get_active_players(sample_match.id, db)
+        assert len(active) == 15
 
     def test_ordered_by_number(self, db, sample_match):
         active = get_active_players(sample_match.id, db)
