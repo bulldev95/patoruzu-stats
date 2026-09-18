@@ -13,6 +13,7 @@ class Player(Base):
 
     id = Column(String, primary_key=True, default=new_id)
     personal_id = Column(String, nullable=False, unique=True)  # DNI — business key
+    surname = Column(String, nullable=False)
     name = Column(String, nullable=False)
 
     # Totales históricos

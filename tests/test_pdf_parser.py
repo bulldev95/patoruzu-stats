@@ -62,7 +62,8 @@ def test_parse_first_player(mock_pdfplumber):
     result = parse_team_sheet("fake.pdf")
     first = result["players"][0]
     assert first["number"] == 1
-    assert first["name"] == "Roldan, Denis"
+    assert first["surname"] == "Roldan"
+    assert first["name"] == "Denis"
     assert first["personal_id"] == "38797877"
 
 
@@ -84,11 +85,21 @@ def test_parse_player_numbers_sequential(mock_pdfplumber):
 
 
 @patch("utils.pdf_parser.pdfplumber")
-def test_parse_multiword_name(mock_pdfplumber):
+def test_parse_multiword_surname(mock_pdfplumber):
     mock_pdfplumber.open.return_value = make_pdf_mock(SAMPLE_PDF_TEXT)
     result = parse_team_sheet("fake.pdf")
     murillo = next(p for p in result["players"] if p["number"] == 6)
-    assert murillo["name"] == "Murillo Del Prado, Tomas"
+    assert murillo["surname"] == "Murillo Del Prado"
+    assert murillo["name"] == "Tomas"
+
+
+@patch("utils.pdf_parser.pdfplumber")
+def test_parse_multiword_firstname(mock_pdfplumber):
+    mock_pdfplumber.open.return_value = make_pdf_mock(SAMPLE_PDF_TEXT)
+    result = parse_team_sheet("fake.pdf")
+    ramos = next(p for p in result["players"] if p["number"] == 3)
+    assert ramos["surname"] == "Ramos"
+    assert ramos["name"] == "Gonzalo Lucas"
 
 
 @patch("utils.pdf_parser.pdfplumber")
@@ -96,8 +107,8 @@ def test_parse_ffi_ligature_fixed(mock_pdfplumber):
     mock_pdfplumber.open.return_value = make_pdf_mock(SAMPLE_PDF_TEXT)
     result = parse_team_sheet("fake.pdf")
     griffiths = next(p for p in result["players"] if p["number"] == 21)
-    assert griffiths["name"] == "Griffiths, Tomas"
-    assert "`" not in griffiths["name"]
+    assert griffiths["surname"] == "Griffiths"
+    assert "`" not in griffiths["surname"]
 
 
 @patch("utils.pdf_parser.pdfplumber")
@@ -107,3 +118,13 @@ def test_parse_personal_ids_are_strings(mock_pdfplumber):
     for player in result["players"]:
         assert isinstance(player["personal_id"], str)
         assert player["personal_id"].isdigit()
+
+
+@patch("utils.pdf_parser.pdfplumber")
+def test_parse_players_have_surname_and_name(mock_pdfplumber):
+    mock_pdfplumber.open.return_value = make_pdf_mock(SAMPLE_PDF_TEXT)
+    result = parse_team_sheet("fake.pdf")
+    for player in result["players"]:
+        assert "surname" in player
+        assert "name" in player
+        assert "," not in player["surname"]

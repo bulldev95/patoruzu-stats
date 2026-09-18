@@ -55,7 +55,7 @@
           <div class="flex items-center gap-3 py-1">
             <span class="w-8 text-center font-bold font-mono text-lg">{{ item.mp.number }}</span>
             <div class="flex-1 min-w-0">
-              <div class="font-medium truncate">{{ item.player.name }}</div>
+              <div class="font-medium truncate">{{ item.player.surname }}, {{ item.player.name }}</div>
               <div class="text-xs text-base-content/50">{{ item.mp.position }}</div>
             </div>
           </div>
@@ -74,7 +74,7 @@
           {% for item in bench %}
           <div class="flex items-center gap-2 py-1">
             <span class="w-7 text-center font-bold font-mono text-base-content/60">{{ item.mp.number }}</span>
-            <span class="text-sm truncate">{{ item.player.name }}</span>
+            <span class="text-sm truncate">{{ item.player.surname }}, {{ item.player.name }}</span>
           </div>
           {% endfor %}
         </div>

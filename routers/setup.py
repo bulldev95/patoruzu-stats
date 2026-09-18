@@ -31,6 +31,11 @@ async def upload_pdf(request: Request, file: UploadFile = File(...)):
     tmp_path = await save_upload_to_tempfile(file)
     try:
         data = parse_team_sheet(tmp_path)
+    except Exception:
+        return templates.TemplateResponse("setup/upload.html", {
+            "request": request,
+            "error": "Invalid PDF format. Please upload the official UAR squad sheet from bd.uar.com.ar.",
+        })
     finally:
         os.unlink(tmp_path)
 
@@ -65,16 +70,18 @@ async def confirm_setup(
     indices = [k.split("_")[1] for k in form.keys() if k.startswith("number_")]
     for idx in indices:
         number = int(form[f"number_{idx}"])
+        surname = form[f"surname_{idx}"]
         name = form[f"name_{idx}"]
         personal_id = form[f"personal_id_{idx}"]
 
         player = db.query(Player).filter_by(personal_id=personal_id).first()
         if not player:
-            player = Player(personal_id=personal_id, name=name)
+            player = Player(personal_id=personal_id, surname=surname, name=name)
             db.add(player)
             db.flush()
         else:
-            player.name = name  # keep name in sync with latest sheet
+            player.surname = surname
+            player.name = name
 
         mp = MatchPlayer(
             match_id=match.id,

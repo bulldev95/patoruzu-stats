@@ -19,7 +19,7 @@ POSITIONS = {
 }
 
 SAMPLE_PLAYERS = [
-    {"number": i, "name": f"Player {i}", "personal_id": f"1000000{i:02d}"}
+    {"number": i, "surname": f"Surname{i}", "name": f"Name{i}", "personal_id": f"1000000{i:02d}"}
     for i in range(1, 24)
 ]
 
@@ -133,7 +133,7 @@ def sample_match(db):
     db.flush()
 
     for data in SAMPLE_PLAYERS:
-        player = Player(personal_id=data["personal_id"], name=data["name"])
+        player = Player(personal_id=data["personal_id"], surname=data["surname"], name=data["name"])
         db.add(player)
         db.flush()
         number = data["number"]
@@ -162,6 +162,7 @@ def confirm_form_data(players=None, **overrides):
     }
     for i, p in enumerate(players, 1):
         data[f"number_{i}"] = str(p["number"])
+        data[f"surname_{i}"] = p["surname"]
         data[f"name_{i}"] = p["name"]
         data[f"personal_id_{i}"] = p["personal_id"]
     return data

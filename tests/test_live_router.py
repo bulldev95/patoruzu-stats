@@ -36,19 +36,17 @@ class TestLiveView:
 
     def test_shows_starter_names(self, client, sample_match):
         response = client.get(f"/live/{sample_match.id}")
-        assert "Player 1" in response.text
-        assert "Player 15" in response.text
-
-    def test_does_not_show_starter_as_bench(self, client, sample_match):
-        response = client.get(f"/live/{sample_match.id}")
-        # Player 1 is a starter, should not appear in bench section
-        bench_section = response.text.split("Bench")[1] if "Bench" in response.text else ""
-        assert "Player 1" not in bench_section or "Player 16" in bench_section
+        assert "Surname1" in response.text
+        assert "Surname15" in response.text
 
     def test_shows_sub_names(self, client, sample_match):
         response = client.get(f"/live/{sample_match.id}")
-        assert "Player 16" in response.text
-        assert "Player 23" in response.text
+        assert "Surname16" in response.text
+        assert "Surname23" in response.text
+
+    def test_shows_surname_comma_name_format(self, client, sample_match):
+        response = client.get(f"/live/{sample_match.id}")
+        assert "Surname1, Name1" in response.text
 
     def test_second_period_label(self, client, sample_match, db):
         sample_match.period = 2

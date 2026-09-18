@@ -41,10 +41,15 @@ def parse_team_sheet(pdf_path: str) -> dict:
     for line in lines:
         m = player_re.match(line)
         if m:
-            _, number, name, personal_id = m.groups()
+            _, number, raw_name, personal_id = m.groups()
+            raw_name = raw_name.strip().replace("`", "ffi")  # PDF ligature artifact (ffi → `)
+            parts = raw_name.split(", ", 1)
+            surname = parts[0]
+            first_name = parts[1] if len(parts) == 2 else ""
             players.append({
                 "number": int(number),
-                "name": name.strip().replace("`", "ffi"),  # PDF ligature artifact (ffi → `)
+                "surname": surname,
+                "name": first_name,
                 "personal_id": personal_id,
             })
 

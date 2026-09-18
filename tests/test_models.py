@@ -17,21 +17,22 @@ def test_new_id_is_unique():
 
 class TestPlayer:
     def test_create(self, db):
-        player = Player(personal_id="12345678", name="Roldan, Denis")
+        player = Player(personal_id="12345678", surname="Roldan", name="Denis")
         db.add(player)
         db.commit()
         saved = db.query(Player).filter_by(personal_id="12345678").first()
-        assert saved.name == "Roldan, Denis"
+        assert saved.surname == "Roldan"
+        assert saved.name == "Denis"
 
     def test_id_auto_generated(self, db):
-        player = Player(personal_id="11111111", name="Test Player")
+        player = Player(personal_id="11111111", surname="Test", name="Player")
         db.add(player)
         db.commit()
         assert player.id is not None
         uuid.UUID(player.id)
 
     def test_stats_default_to_zero(self, db):
-        player = Player(personal_id="22222222", name="Test Player")
+        player = Player(personal_id="22222222", surname="Test", name="Player")
         db.add(player)
         db.commit()
         assert player.games_played == 0
@@ -52,14 +53,19 @@ class TestPlayer:
         assert player.red_cards_20min == 0
 
     def test_personal_id_unique_constraint(self, db):
-        db.add(Player(personal_id="99999999", name="Player A"))
+        db.add(Player(personal_id="99999999", surname="Player", name="A"))
         db.commit()
-        db.add(Player(personal_id="99999999", name="Player B"))
+        db.add(Player(personal_id="99999999", surname="Player", name="B"))
+        with pytest.raises(IntegrityError):
+            db.commit()
+
+    def test_surname_required(self, db):
+        db.add(Player(personal_id="88888888", surname=None, name="Denis"))
         with pytest.raises(IntegrityError):
             db.commit()
 
     def test_name_required(self, db):
-        db.add(Player(personal_id="88888888", name=None))
+        db.add(Player(personal_id="77777777", surname="Roldan", name=None))
         with pytest.raises(IntegrityError):
             db.commit()
 
@@ -100,7 +106,7 @@ class TestMatch:
 
 class TestMatchPlayer:
     def test_create(self, db):
-        player = Player(personal_id="33333333", name="Test Player")
+        player = Player(personal_id="33333333", surname="Test", name="Player")
         db.add(player)
         match = Match(date="2026-08-15", rival="DRAIG GOCH", competition="Torneo Austral")
         db.add(match)
@@ -120,7 +126,7 @@ class TestMatchPlayer:
         assert mp.is_starter is True
 
     def test_sub_has_no_position(self, db):
-        player = Player(personal_id="44444444", name="Sub Player")
+        player = Player(personal_id="44444444", surname="Sub", name="Player")
         db.add(player)
         match = Match(date="2026-08-15", rival="DRAIG GOCH", competition="Torneo Austral")
         db.add(match)
@@ -141,7 +147,7 @@ class TestMatchPlayer:
 
 class TestEvent:
     def test_create(self, db):
-        player = Player(personal_id="55555555", name="Test Player")
+        player = Player(personal_id="55555555", surname="Test", name="Player")
         db.add(player)
         match = Match(date="2026-08-15", rival="DRAIG GOCH", competition="Torneo Austral")
         db.add(match)
@@ -186,8 +192,8 @@ class TestEvent:
 
 class TestSubstitution:
     def test_create(self, db):
-        player_out = Player(personal_id="66666666", name="Player Out")
-        player_in = Player(personal_id="77777777", name="Player In")
+        player_out = Player(personal_id="66666666", surname="Player", name="Out")
+        player_in = Player(personal_id="77777777", surname="Player", name="In")
         db.add_all([player_out, player_in])
         match = Match(date="2026-08-15", rival="DRAIG GOCH", competition="Torneo Austral")
         db.add(match)
@@ -205,5 +211,7 @@ class TestSubstitution:
         saved = db.query(Substitution).first()
         assert saved.minute == 55
         assert saved.position == "Prop"
-        assert saved.player_out.name == "Player Out"
-        assert saved.player_in.name == "Player In"
+        assert saved.player_out.surname == "Player"
+        assert saved.player_out.name == "Out"
+        assert saved.player_in.surname == "Player"
+        assert saved.player_in.name == "In"
