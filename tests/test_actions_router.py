@@ -301,3 +301,152 @@ class TestSaveEvent:
         data["conversion_attempted"] = "no"
         client.post(f"/live/{sample_match.id}/events", data=data)
         assert db.query(Event).filter_by(match_id=sample_match.id).count() == 1
+
+
+class TestPlayerStats:
+    def _get_player(self, sample_match, db):
+        from models import MatchPlayer
+        mp = db.query(MatchPlayer).filter_by(match_id=sample_match.id, number=1).first()
+        from models import Player
+        return db.query(Player).filter_by(id=mp.player_id).first()
+
+    def _player_id(self, sample_match, db):
+        from models import MatchPlayer
+        mp = db.query(MatchPlayer).filter_by(match_id=sample_match.id, number=1).first()
+        return mp.player_id
+
+    def test_try_increments_tries(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("try", "scored", player_id=pid))
+        player = self._get_player(sample_match, db)
+        db.refresh(player)
+        assert player.tries == 1
+
+    def test_conversion_scored_increments_attempts_and_scored(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("conversion", "scored", player_id=pid))
+        player = self._get_player(sample_match, db)
+        db.refresh(player)
+        assert player.conversions_attempts == 1
+        assert player.conversions_scored == 1
+
+    def test_conversion_missed_increments_attempts_only(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("conversion", "missed", player_id=pid))
+        player = self._get_player(sample_match, db)
+        db.refresh(player)
+        assert player.conversions_attempts == 1
+        assert player.conversions_scored == 0
+
+    def test_drop_scored_increments_attempts_and_scored(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("drop", "scored", player_id=pid))
+        player = self._get_player(sample_match, db)
+        db.refresh(player)
+        assert player.drops_attempts == 1
+        assert player.drops_scored == 1
+
+    def test_drop_missed_increments_attempts_only(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("drop", "missed", player_id=pid))
+        player = self._get_player(sample_match, db)
+        db.refresh(player)
+        assert player.drops_attempts == 1
+        assert player.drops_scored == 0
+
+    def test_penal_kicked_increments_penals_scored(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("penal", "kicked", player_id=pid))
+        player = self._get_player(sample_match, db)
+        db.refresh(player)
+        assert player.penals_scored == 1
+
+    def test_penal_conceded_does_not_change_stats(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("penal", "conceded", player_id=pid))
+        player = self._get_player(sample_match, db)
+        db.refresh(player)
+        assert player.penals_scored == 0
+
+    def test_tackle_positive_updates_tackles(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("tackle", "positive", player_id=pid))
+        player = self._get_player(sample_match, db)
+        db.refresh(player)
+        assert player.tackles_total == 1
+        assert player.tackles_positive == 1
+        assert player.tackles_missed == 0
+
+    def test_tackle_missed_updates_tackles(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("tackle", "missed", player_id=pid))
+        player = self._get_player(sample_match, db)
+        db.refresh(player)
+        assert player.tackles_total == 1
+        assert player.tackles_missed == 1
+        assert player.tackles_positive == 0
+
+    def test_yellow_card_updates_yellow_cards(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("tarjeta", "yellow", player_id=pid))
+        player = self._get_player(sample_match, db)
+        db.refresh(player)
+        assert player.yellow_cards == 1
+
+    def test_red_card_updates_red_cards(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("tarjeta", "red", player_id=pid))
+        player = self._get_player(sample_match, db)
+        db.refresh(player)
+        assert player.red_cards == 1
+
+    def test_try_inline_conversion_updates_kicker_stats(self, client, sample_match, db):
+        from models import MatchPlayer
+        scorer_mp = db.query(MatchPlayer).filter_by(match_id=sample_match.id, number=1).first()
+        kicker_mp = db.query(MatchPlayer).filter_by(match_id=sample_match.id, number=10).first()
+        data = event_form("try", "scored", player_id=scorer_mp.player_id)
+        data["conversion_attempted"] = "yes"
+        data["conversion_result"] = "scored"
+        data["conversion_player_id"] = kicker_mp.player_id
+        client.post(f"/live/{sample_match.id}/events", data=data)
+        from models import Player
+        scorer = db.query(Player).filter_by(id=scorer_mp.player_id).first()
+        kicker = db.query(Player).filter_by(id=kicker_mp.player_id).first()
+        db.refresh(scorer)
+        db.refresh(kicker)
+        assert scorer.tries == 1
+        assert kicker.conversions_scored == 1
+
+    def test_kick_increments_kicks(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("kick", "recovered", player_id=pid))
+        player = self._get_player(sample_match, db)
+        db.refresh(player)
+        assert player.kicks == 1
+
+    def test_perdida_increments_turnovers(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("perdida", "knock_on", player_id=pid))
+        player = self._get_player(sample_match, db)
+        db.refresh(player)
+        assert player.turnovers == 1
+
+    def test_lineout_won_increments_lineouts(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("lineout", "won", player_id=pid))
+        player = self._get_player(sample_match, db)
+        db.refresh(player)
+        assert player.lineouts == 1
+
+    def test_red_card_20min_updates_red_cards_20min(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("tarjeta", "red_20", player_id=pid))
+        player = self._get_player(sample_match, db)
+        db.refresh(player)
+        assert player.red_cards_20min == 1
+
+    def test_no_player_id_skips_stat_update(self, client, sample_match, db):
+        client.post(f"/live/{sample_match.id}/events", data=event_form("try", "scored"))
+        from models import Player
+        players = db.query(Player).all()
+        assert all(p.tries == 0 for p in players)

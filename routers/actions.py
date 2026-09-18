@@ -5,7 +5,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models import Event, Match
+from models import Event, Match, Player
 from utils.match_utils import calculate_minute, get_active_players, get_recent_events
 
 router = APIRouter(prefix="/live")
@@ -111,9 +111,16 @@ async def save_event(request: Request, match_id: str, db: Session = Depends(get_
     deltas = SCORE_DELTA.get(event_type, {})
     match.score_own += deltas.get(result, deltas.get("any", 0))
 
+    # Player stat updates
+    if player_id:
+        player = db.query(Player).filter_by(id=player_id).first()
+        if player:
+            _update_player_stats(player, event_type, result)
+
     # Inline conversion when try is saved in the same form
     if event_type == "try" and form.get("conversion_attempted") == "yes":
         conv_result = form.get("conversion_result", "missed")
+        conv_player_id = form.get("conversion_player_id") or None
         conv_event = Event(
             match_id=match_id,
             minute=calculate_minute(match),
@@ -121,11 +128,15 @@ async def save_event(request: Request, match_id: str, db: Session = Depends(get_
             team="own",
             type="conversion",
             result=conv_result,
-            player_id=form.get("conversion_player_id") or None,
+            player_id=conv_player_id,
         )
         db.add(conv_event)
         if conv_result == "scored":
             match.score_own += 2
+        if conv_player_id:
+            conv_player = db.query(Player).filter_by(id=conv_player_id).first()
+            if conv_player:
+                _update_player_stats(conv_player, "conversion", conv_result)
 
     db.commit()
     db.refresh(match)
@@ -152,3 +163,37 @@ def _clock_response(request: Request, match: Match) -> HTMLResponse:
         "request": request,
         "match": match,
     })
+
+
+def _update_player_stats(player: Player, event_type: str, result: str) -> None:
+    if event_type == "try":
+        player.tries += 1
+    elif event_type == "conversion":
+        player.conversions_attempts += 1
+        if result == "scored":
+            player.conversions_scored += 1
+    elif event_type == "drop":
+        player.drops_attempts += 1
+        if result == "scored":
+            player.drops_scored += 1
+    elif event_type == "penal" and result == "kicked":
+        player.penals_scored += 1
+    elif event_type == "tackle":
+        player.tackles_total += 1
+        if result == "positive":
+            player.tackles_positive += 1
+        else:
+            player.tackles_missed += 1
+    elif event_type == "tarjeta":
+        if result == "yellow":
+            player.yellow_cards += 1
+        elif result == "red":
+            player.red_cards += 1
+        elif result == "red_20":
+            player.red_cards_20min += 1
+    elif event_type == "kick":
+        player.kicks += 1
+    elif event_type == "perdida":
+        player.turnovers += 1
+    elif event_type == "lineout" and result in ("won", "stolen"):
+        player.lineouts += 1

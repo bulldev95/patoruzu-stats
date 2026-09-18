@@ -24,6 +24,7 @@ class Player(Base):
     conversions_scored = Column(Integer, default=0)
     drops_attempts = Column(Integer, default=0)
     drops_scored = Column(Integer, default=0)
+    penals_scored = Column(Integer, default=0)
     tackles_total = Column(Integer, default=0)
     tackles_positive = Column(Integer, default=0)
     tackles_missed = Column(Integer, default=0)
