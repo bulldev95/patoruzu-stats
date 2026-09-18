@@ -261,3 +261,43 @@ class TestSaveEvent:
     def test_invalid_match_returns_404(self, client):
         response = client.post("/live/nonexistent/events", data=event_form())
         assert response.status_code == 404
+
+    def test_try_with_conversion_scored_adds_7(self, client, sample_match, db):
+        data = event_form("try", "scored")
+        data["conversion_attempted"] = "yes"
+        data["conversion_result"] = "scored"
+        client.post(f"/live/{sample_match.id}/events", data=data)
+        db.refresh(sample_match)
+        assert sample_match.score_own == 7
+
+    def test_try_with_conversion_missed_adds_5(self, client, sample_match, db):
+        data = event_form("try", "scored")
+        data["conversion_attempted"] = "yes"
+        data["conversion_result"] = "missed"
+        client.post(f"/live/{sample_match.id}/events", data=data)
+        db.refresh(sample_match)
+        assert sample_match.score_own == 5
+
+    def test_try_without_conversion_adds_5(self, client, sample_match, db):
+        data = event_form("try", "scored")
+        data["conversion_attempted"] = "no"
+        client.post(f"/live/{sample_match.id}/events", data=data)
+        db.refresh(sample_match)
+        assert sample_match.score_own == 5
+
+    def test_try_with_conversion_creates_two_events(self, client, sample_match, db):
+        data = event_form("try", "scored")
+        data["conversion_attempted"] = "yes"
+        data["conversion_result"] = "scored"
+        client.post(f"/live/{sample_match.id}/events", data=data)
+        events = db.query(Event).filter_by(match_id=sample_match.id).all()
+        types = {e.type for e in events}
+        assert "try" in types
+        assert "conversion" in types
+        assert len(events) == 2
+
+    def test_try_without_conversion_creates_one_event(self, client, sample_match, db):
+        data = event_form("try", "scored")
+        data["conversion_attempted"] = "no"
+        client.post(f"/live/{sample_match.id}/events", data=data)
+        assert db.query(Event).filter_by(match_id=sample_match.id).count() == 1

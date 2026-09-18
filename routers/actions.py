@@ -111,6 +111,22 @@ async def save_event(request: Request, match_id: str, db: Session = Depends(get_
     deltas = SCORE_DELTA.get(event_type, {})
     match.score_own += deltas.get(result, deltas.get("any", 0))
 
+    # Inline conversion when try is saved in the same form
+    if event_type == "try" and form.get("conversion_attempted") == "yes":
+        conv_result = form.get("conversion_result", "missed")
+        conv_event = Event(
+            match_id=match_id,
+            minute=calculate_minute(match),
+            period=match.period,
+            team="own",
+            type="conversion",
+            result=conv_result,
+            player_id=form.get("conversion_player_id") or None,
+        )
+        db.add(conv_event)
+        if conv_result == "scored":
+            match.score_own += 2
+
     db.commit()
     db.refresh(match)
 

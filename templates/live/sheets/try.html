@@ -1,15 +1,74 @@
-{% from "live/sheets/_base.html" import close_btn, player_select, zone_select, submit_btn %}
-<div class="flex items-center justify-between mb-4">
-  <h2 class="text-xl font-bold">Try <span class="badge badge-success">+5</span></h2>
-  {{ close_btn() }}
+{% from "live/sheets/_base.html" import close_btn, zone_select, submit_btn %}
+<div x-data="{ conv: true }">
+
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-xl font-bold">Try <span class="badge badge-success">+5</span></h2>
+    {{ close_btn() }}
+  </div>
+
+  <form hx-post="/live/{{ match_id }}/events"
+        hx-target="#events-feed"
+        hx-swap="innerHTML"
+        hx-on::after-request="window.dispatchEvent(new CustomEvent('sheet-done'))">
+    <input type="hidden" name="type" value="try">
+    <input type="hidden" name="result" value="scored">
+    <input type="hidden" name="conversion_attempted" :value="conv ? 'yes' : 'no'">
+
+    <!-- Try scorer -->
+    <p class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-2">Try scorer</p>
+    <div class="form-control mb-3">
+      <select name="player_id" class="select select-bordered w-full" required>
+        {% for mp, player in players %}
+        <option value="{{ player.id }}">{{ mp.number }} – {{ player.surname }}, {{ player.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    {{ zone_select() }}
+
+    <div class="divider my-2"></div>
+
+    <!-- Conversion toggle header -->
+    <div class="flex items-center justify-between mb-3">
+      <p class="text-xs font-semibold uppercase tracking-wide text-base-content/50">
+        Conversion <span class="badge badge-success badge-sm">+2</span>
+      </p>
+      <button type="button" @click="conv = !conv" class="btn btn-sm"
+              :class="conv ? 'btn-success' : 'btn-ghost'">
+        <span x-text="conv ? 'Attempted' : 'No kick'"></span>
+      </button>
+    </div>
+
+    <!-- Conversion fields (removed from DOM when skipped) -->
+    <template x-if="conv">
+      <div x-data="{ sel: null }">
+        <div class="form-control mb-3">
+          <label class="label"><span class="label-text font-medium">Kicker</span></label>
+          <select name="conversion_player_id" class="select select-bordered w-full" required>
+            {% for mp, player in players %}
+            <option value="{{ player.id }}">{{ mp.number }} – {{ player.surname }}, {{ player.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-control mb-4">
+          <label class="label"><span class="label-text font-medium">Result</span></label>
+          <div class="grid grid-cols-2 gap-2">
+            {% for value, label in [("scored","Scored"),("missed","Missed")] %}
+            <label class="cursor-pointer" @click="sel = '{{ value }}'">
+              <input type="radio" name="conversion_result" value="{{ value }}" class="hidden" required>
+              <div class="p-3 rounded-lg border-2 text-center text-sm font-semibold transition-colors select-none"
+                   :class="sel === '{{ value }}' ? 'border-primary bg-primary text-primary-content' : 'border-base-300 hover:border-base-content/30'">
+                {{ label }}
+              </div>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </template>
+
+    {{ submit_btn("Save Try") }}
+  </form>
+
 </div>
-<form hx-post="/live/{{ match_id }}/events"
-      hx-target="#events-feed"
-      hx-swap="innerHTML"
-      hx-on::after-request="window.dispatchEvent(new CustomEvent('sheet-done'))">
-  <input type="hidden" name="type" value="try">
-  <input type="hidden" name="result" value="scored">
-  {{ player_select(players) }}
-  {{ zone_select() }}
-  {{ submit_btn("Save Try") }}
-</form>
