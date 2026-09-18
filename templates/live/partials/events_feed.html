@@ -1,0 +1,17 @@
+<!-- OOB: update scoreboard -->
+<div id="score-own" hx-swap-oob="true">{{ match.score_own }}</div>
+<div id="score-rival" hx-swap-oob="true">{{ match.score_rival }}</div>
+
+<!-- Events list (main target: #events-feed) -->
+{% if events %}
+  {% for event in events %}
+  <div class="flex items-center gap-2 py-1 border-b border-base-200 last:border-0">
+    <span class="badge badge-sm badge-ghost font-mono">{{ event.minute }}'</span>
+    <span class="font-medium capitalize">{{ event.type }}</span>
+    <span class="text-base-content/60 text-sm">{{ event.result }}</span>
+    {% if event.zone %}<span class="badge badge-sm badge-outline">Z{{ event.zone }}</span>{% endif %}
+  </div>
+  {% endfor %}
+{% else %}
+  <p class="text-base-content/40 text-sm text-center py-2">No events yet</p>
+{% endif %}

@@ -6,45 +6,75 @@
   <title>Patoruzú vs {{ match.rival }}</title>
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@2.0.3"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body class="bg-base-200 min-h-screen">
+<body class="bg-base-200 min-h-screen"
+  x-data="{ sheetOpen: false }"
+  @sheet-done.window="sheetOpen = false"
+>
 
   <!-- Scoreboard -->
   <div class="bg-neutral text-neutral-content px-4 pt-4 pb-3">
 
-    <!-- Period -->
     <div class="text-center mb-2">
       <span class="badge badge-outline badge-lg text-neutral-content/70">
         {{ "1st" if match.period == 1 else "2nd" }} Half
       </span>
     </div>
 
-    <!-- Score -->
     <div class="flex items-center justify-center gap-4 mb-3">
       <div class="text-center flex-1">
         <div class="text-xs font-medium text-neutral-content/60 uppercase tracking-wide mb-1">Patoruzú</div>
-        <div class="text-6xl font-bold tabular-nums">{{ match.score_own }}</div>
+        <div id="score-own" class="text-6xl font-bold tabular-nums">{{ match.score_own }}</div>
       </div>
-
       <div class="text-3xl font-light text-neutral-content/40">–</div>
-
       <div class="text-center flex-1">
         <div class="text-xs font-medium text-neutral-content/60 uppercase tracking-wide mb-1 truncate">{{ match.rival }}</div>
-        <div class="text-6xl font-bold tabular-nums">{{ match.score_rival }}</div>
+        <div id="score-rival" class="text-6xl font-bold tabular-nums">{{ match.score_rival }}</div>
       </div>
     </div>
 
-    <!-- Clock -->
     <div class="text-center">
-      <div class="text-4xl font-mono font-semibold tracking-widest">00:00</div>
+      {% include "live/partials/clock.html" %}
     </div>
-
   </div>
 
-  <!-- Players -->
-  <div class="p-3 space-y-3">
+  <!-- Action buttons -->
+  <div class="p-3">
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
 
-    <!-- Starters -->
+      {% set actions = [
+        ("tackle",     "Tackle",     "btn-outline"),
+        ("try",        "Try",        "btn-success"),
+        ("conversion", "Conversion", "btn-success btn-outline"),
+        ("drop",       "Drop",       "btn-success btn-outline"),
+        ("scrum",      "Scrum",      "btn-outline"),
+        ("lineout",    "Lineout",    "btn-outline"),
+        ("ruck",       "Ruck",       "btn-outline"),
+        ("maul",       "Maul",       "btn-outline"),
+        ("penal",      "Penal",      "btn-warning btn-outline"),
+        ("kick",       "Kick",       "btn-outline"),
+        ("perdida",    "Pérdida",    "btn-error btn-outline"),
+        ("salida",     "Salida",     "btn-outline"),
+        ("tarjeta",    "Tarjeta",    "btn-error"),
+      ] %}
+
+      {% for type, label, style in actions %}
+      <button
+        class="btn {{ style }} h-14 text-base"
+        hx-get="/live/{{ match.id }}/actions/{{ type }}"
+        hx-target="#sheet-content"
+        hx-swap="innerHTML"
+        @click="sheetOpen = true"
+      >{{ label }}</button>
+      {% endfor %}
+
+    </div>
+  </div>
+
+  <!-- Players on field -->
+  <div class="px-3 pb-3 space-y-3">
     <div class="card bg-base-100 shadow">
       <div class="card-body p-3">
         <h2 class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-2">
@@ -52,11 +82,11 @@
         </h2>
         <div class="space-y-1">
           {% for item in starters %}
-          <div class="flex items-center gap-3 py-1">
-            <span class="w-8 text-center font-bold font-mono text-lg">{{ item.mp.number }}</span>
+          <div class="flex items-center gap-3 py-0.5">
+            <span class="w-7 text-center font-bold font-mono">{{ item.mp.number }}</span>
             <div class="flex-1 min-w-0">
-              <div class="font-medium truncate">{{ item.player.surname }}, {{ item.player.name }}</div>
-              <div class="text-xs text-base-content/50">{{ item.mp.position }}</div>
+              <span class="font-medium truncate">{{ item.player.surname }}, {{ item.player.name }}</span>
+              <span class="text-xs text-base-content/40 ml-1">{{ item.mp.position }}</span>
             </div>
           </div>
           {% endfor %}
@@ -64,16 +94,15 @@
       </div>
     </div>
 
-    <!-- Bench -->
     <div class="card bg-base-100 shadow">
       <div class="card-body p-3">
         <h2 class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-2">
           Bench ({{ bench | length }})
         </h2>
-        <div class="grid grid-cols-2 gap-x-4 gap-y-1">
+        <div class="grid grid-cols-2 gap-x-4 gap-y-0.5">
           {% for item in bench %}
-          <div class="flex items-center gap-2 py-1">
-            <span class="w-7 text-center font-bold font-mono text-base-content/60">{{ item.mp.number }}</span>
+          <div class="flex items-center gap-2">
+            <span class="w-6 text-center font-mono text-sm text-base-content/50">{{ item.mp.number }}</span>
             <span class="text-sm truncate">{{ item.player.surname }}, {{ item.player.name }}</span>
           </div>
           {% endfor %}
@@ -81,6 +110,45 @@
       </div>
     </div>
 
+    <!-- Events feed -->
+    <div class="card bg-base-100 shadow">
+      <div class="card-body p-3">
+        <h2 class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-2">Recent events</h2>
+        <div id="events-feed">
+          {% include "live/partials/events_feed.html" %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom sheet backdrop -->
+  <div
+    x-show="sheetOpen"
+    x-transition:enter="transition ease-out duration-200"
+    x-transition:enter-start="opacity-0"
+    x-transition:enter-end="opacity-100"
+    x-transition:leave="transition ease-in duration-150"
+    x-transition:leave-start="opacity-100"
+    x-transition:leave-end="opacity-0"
+    @click="sheetOpen = false"
+    class="fixed inset-0 bg-black/50 z-40"
+    style="display:none"
+  ></div>
+
+  <!-- Bottom sheet -->
+  <div
+    x-show="sheetOpen"
+    x-transition:enter="transition ease-out duration-300"
+    x-transition:enter-start="transform translate-y-full"
+    x-transition:enter-end="transform translate-y-0"
+    x-transition:leave="transition ease-in duration-200"
+    x-transition:leave-start="transform translate-y-0"
+    x-transition:leave-end="transform translate-y-full"
+    class="fixed inset-x-0 bottom-0 z-50 bg-base-100 rounded-t-2xl shadow-2xl max-h-[85vh] overflow-y-auto"
+    style="display:none"
+  >
+    <div class="w-10 h-1 bg-base-300 rounded-full mx-auto mt-3 mb-1"></div>
+    <div id="sheet-content" class="p-4"></div>
   </div>
 
 </body>

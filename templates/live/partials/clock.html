@@ -1,0 +1,44 @@
+<div id="clock-container"
+  x-data="{
+    startTs: {{ match.start_timestamp | tojson }},
+    accumulated: {{ match.accumulated_time }},
+    display: '00:00',
+    init() { this.tick(); setInterval(() => this.tick(), 1000) },
+    tick() {
+      let ms = this.accumulated;
+      if (this.startTs !== null) ms += Date.now() - this.startTs;
+      const m = Math.floor(ms / 60000);
+      const s = Math.floor((ms % 60000) / 1000);
+      this.display = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+    }
+  }"
+>
+  <div class="text-4xl font-mono font-semibold tracking-widest mb-2" x-text="display">00:00</div>
+
+  <div class="flex justify-center gap-2">
+    {% if match.status in ('setup', 'paused') %}
+    <button
+      class="btn btn-sm btn-success"
+      hx-post="/live/{{ match.id }}/clock/start"
+      hx-target="#clock-container"
+      hx-swap="outerHTML"
+    >▶ Start</button>
+    {% else %}
+    <button
+      class="btn btn-sm btn-warning"
+      hx-post="/live/{{ match.id }}/clock/pause"
+      hx-target="#clock-container"
+      hx-swap="outerHTML"
+    >⏸ Pause</button>
+    {% endif %}
+
+    {% if match.period == 1 and match.status == 'paused' and match.accumulated_time > 0 %}
+    <button
+      class="btn btn-sm btn-ghost"
+      hx-post="/live/{{ match.id }}/clock/next-period"
+      hx-target="#clock-container"
+      hx-swap="outerHTML"
+    >2nd Half →</button>
+    {% endif %}
+  </div>
+</div>

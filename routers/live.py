@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from models import Match, MatchPlayer, Player
+from utils.match_utils import get_recent_events
 
 router = APIRouter(prefix="/live")
 templates = Jinja2Templates(directory="templates")
@@ -31,9 +32,12 @@ async def live_view(request: Request, match_id: str, db: Session = Depends(get_d
         {"mp": mp, "player": p} for mp, p in roster if not mp.is_starter and mp.minute_out is None
     ]
 
+    events = get_recent_events(match_id, db)
+
     return templates.TemplateResponse("live/index.html", {
         "request": request,
         "match": match,
         "starters": starters,
         "bench": bench,
+        "events": events,
     })

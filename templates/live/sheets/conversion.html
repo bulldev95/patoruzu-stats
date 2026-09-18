@@ -1,0 +1,14 @@
+{% from "live/sheets/_base.html" import close_btn, player_select, result_radio, submit_btn %}
+<div class="flex items-center justify-between mb-4">
+  <h2 class="text-xl font-bold">Conversion <span class="badge badge-success">+2</span></h2>
+  {{ close_btn() }}
+</div>
+<form hx-post="/live/{{ match_id }}/events"
+      hx-target="#events-feed"
+      hx-swap="innerHTML"
+      hx-on::after-request="window.dispatchEvent(new CustomEvent('sheet-done'))">
+  <input type="hidden" name="type" value="conversion">
+  {{ player_select(players) }}
+  {{ result_radio([("scored","Scored"),("missed","Missed")]) }}
+  {{ submit_btn() }}
+</form>

@@ -11,9 +11,10 @@ app = FastAPI(title="Patoruzú Stats")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-from routers import setup, live  # noqa: E402
+from routers import setup, live, actions  # noqa: E402
 app.include_router(setup.router)
 app.include_router(live.router)
+app.include_router(actions.router)
 
 
 @app.get("/")
