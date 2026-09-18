@@ -28,8 +28,11 @@ def parse_team_sheet(pdf_path: str) -> dict:
     paren_pos = rest.find(")")
     competition = rest[: paren_pos + 1].strip() if paren_pos != -1 else rest.split("  ")[0].strip()
 
-    # Rival: the teams line contains both team names on one line
-    teams_line = next(l for l in lines if OWN_TEAM_KEYWORD in l and "Planilla" not in l)
+    # Rival: the teams line comes right after "Local Puntos Visitante Puntos"
+    for i, line in enumerate(lines):
+        if "Local Puntos" in line and "Visitante Puntos" in line:
+            teams_line = lines[i + 1]
+            break
     rival = teams_line.replace(OWN_TEAM, "").strip()
 
     # Players: rows matching "{pos} {number} {name} {personal_id}"
