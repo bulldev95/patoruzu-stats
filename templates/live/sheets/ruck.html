@@ -1,0 +1,14 @@
+{% from "live/sheets/_base.html" import close_btn, zone_select, result_radio, submit_btn %}
+<div class="flex items-center justify-between mb-4">
+  <h2 class="text-xl font-bold">Ruck</h2>
+  {{ close_btn() }}
+</div>
+<form hx-post="/live/{{ match_id }}/events"
+      hx-target="#events-feed"
+      hx-swap="innerHTML"
+      hx-on::after-request="window.dispatchEvent(new CustomEvent('sheet-done'))">
+  <input type="hidden" name="type" value="ruck">
+  {{ zone_select() }}
+  {{ result_radio([("lost","Lost"),("counter_ruck","Counter-ruck won")]) }}
+  {{ submit_btn() }}
+</form>

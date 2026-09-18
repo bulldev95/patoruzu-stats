@@ -1,0 +1,53 @@
+{% macro close_btn() %}
+<button type="button"
+  class="btn btn-ghost btn-sm btn-circle"
+  @click="window.dispatchEvent(new CustomEvent('sheet-done'))"
+>✕</button>
+{% endmacro %}
+
+{% macro player_select(required=true) %}
+<div class="form-control mb-4">
+  <label class="label"><span class="label-text font-medium">Player</span></label>
+  <select name="player_id" class="select select-bordered w-full" {{ 'required' if required else '' }}>
+    {% if not required %}<option value="">— None —</option>{% endif %}
+    {% for mp, player in players %}
+    <option value="{{ player.id }}">{{ mp.number }} – {{ player.surname }}, {{ player.name }}</option>
+    {% endfor %}
+  </select>
+</div>
+{% endmacro %}
+
+{% macro zone_select() %}
+<div class="form-control mb-4">
+  <label class="label"><span class="label-text font-medium">Zone</span></label>
+  <div class="grid grid-cols-5 gap-1">
+    {% for z in [1,2,3,4,5] %}
+    <label class="cursor-pointer">
+      <input type="radio" name="zone" value="{{ z }}" class="hidden peer" required>
+      <div class="btn btn-outline btn-sm peer-checked:btn-primary peer-checked:btn-active w-full">{{ z }}</div>
+    </label>
+    {% endfor %}
+  </div>
+  <div class="flex justify-between text-xs text-base-content/40 mt-1 px-1">
+    <span>Own 22</span><span>Own 40</span><span>Halfway</span><span>Their 40</span><span>Their 22</span>
+  </div>
+</div>
+{% endmacro %}
+
+{% macro result_radio(options) %}
+<div class="form-control mb-4">
+  <label class="label"><span class="label-text font-medium">Result</span></label>
+  <div class="grid grid-cols-2 gap-2">
+    {% for value, label in options %}
+    <label class="cursor-pointer">
+      <input type="radio" name="result" value="{{ value }}" class="hidden peer" required>
+      <div class="btn btn-outline btn-sm peer-checked:btn-primary peer-checked:btn-active w-full">{{ label }}</div>
+    </label>
+    {% endfor %}
+  </div>
+</div>
+{% endmacro %}
+
+{% macro submit_btn(label="Save") %}
+<button type="submit" class="btn btn-primary w-full mt-2">{{ label }}</button>
+{% endmacro %}
