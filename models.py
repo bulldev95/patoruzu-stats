@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -12,6 +12,7 @@ class Player(Base):
     __tablename__ = "players"
 
     id = Column(String, primary_key=True, default=new_id)
+    personal_id = Column(String, nullable=False, unique=True)  # DNI — business key
     name = Column(String, nullable=False)
 
     # Totales históricos
@@ -49,7 +50,7 @@ class Match(Base):
     # Reloj
     period = Column(Integer, default=1)
     start_timestamp = Column(Float, nullable=True)
-    accumulated_time = Column(Integer, default=0)  # milisegundos acumulados
+    accumulated_time = Column(Integer, default=0)  # milliseconds accumulated during pauses
 
     status = Column(String, default="setup")  # setup / live / paused / finished
 
@@ -65,7 +66,7 @@ class MatchPlayer(Base):
     match_id = Column(String, ForeignKey("matches.id"), nullable=False)
     player_id = Column(String, ForeignKey("players.id"), nullable=False)
     number = Column(Integer, nullable=False)        # 1–23
-    position = Column(String, nullable=True)        # null hasta que ingresa (suplentes)
+    position = Column(String, nullable=True)        # null for subs until they come on
     is_starter = Column(Boolean, default=False)
     minute_in = Column(Integer, default=0)
     minute_out = Column(Integer, nullable=True)
