@@ -6,9 +6,7 @@
 <form hx-post="/live/{{ match_id }}/events"
       hx-target="#events-feed"
       hx-swap="innerHTML"
-      hx-on::after-request="window.dispatchEvent(new CustomEvent('sheet-done'))"
-      x-data="{ favor: null }"
->
+      hx-on::after-request="window.dispatchEvent(new CustomEvent('sheet-done'))">
   <input type="hidden" name="type" value="penal">
 
   {{ zone_select() }}
@@ -29,7 +27,11 @@
       {% for value, label in [("kicked","Kicked (3pts)"),("tap","Tap"),("scrum","Our scrum"),("conceded","Conceded")] %}
       <label class="cursor-pointer">
         <input type="radio" name="result" value="{{ value }}" class="hidden peer" required>
-        <div class="btn btn-outline btn-sm peer-checked:btn-primary peer-checked:btn-active w-full">{{ label }}</div>
+        <div class="p-3 rounded-lg border-2 border-base-300 text-center text-sm font-semibold
+                    peer-checked:border-primary peer-checked:bg-primary peer-checked:text-primary-content
+                    hover:border-base-content/20 transition-colors select-none">
+          {{ label }}
+        </div>
       </label>
       {% endfor %}
     </div>

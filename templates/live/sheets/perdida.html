@@ -9,6 +9,6 @@
       hx-on::after-request="window.dispatchEvent(new CustomEvent('sheet-done'))">
   <input type="hidden" name="type" value="perdida">
   {{ result_radio([("knock_on","Knock-on"),("forward_pass","Forward pass"),("penal","Penalty")]) }}
-  {{ player_select(required=false) }}
+  {{ player_select(players, required=false) }}
   {{ submit_btn() }}
 </form>

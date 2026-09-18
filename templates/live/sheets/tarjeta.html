@@ -12,16 +12,19 @@
   <div class="form-control mb-4">
     <label class="label"><span class="label-text font-medium">Card type</span></label>
     <div class="grid grid-cols-3 gap-2">
-      {% for value, label, style in [("yellow","Yellow","btn-warning"),("red","Red","btn-error"),("red_20","Red 20min","btn-error btn-outline")] %}
+      {% for value, label, color in [("yellow","Yellow","peer-checked:bg-yellow-400 peer-checked:border-yellow-400 peer-checked:text-yellow-900"),("red","Red","peer-checked:bg-red-600 peer-checked:border-red-600 peer-checked:text-white"),("red_20","Red 20","peer-checked:bg-red-300 peer-checked:border-red-400 peer-checked:text-red-900")] %}
       <label class="cursor-pointer">
         <input type="radio" name="result" value="{{ value }}" class="hidden peer" required>
-        <div class="btn {{ style }} btn-sm peer-checked:btn-active w-full">{{ label }}</div>
+        <div class="p-3 rounded-lg border-2 border-base-300 text-center text-sm font-semibold
+                    {{ color }} hover:border-base-content/20 transition-colors select-none">
+          {{ label }}
+        </div>
       </label>
       {% endfor %}
     </div>
   </div>
 
-  {{ player_select() }}
+  {{ player_select(players) }}
 
   <div class="form-control mb-4">
     <label class="label"><span class="label-text font-medium">Cause</span></label>

@@ -1,4 +1,4 @@
-{% from "live/sheets/_base.html" import close_btn, player_select, zone_select, result_radio, submit_btn %}
+{% from "live/sheets/_base.html" import close_btn, zone_select, result_radio, submit_btn %}
 <div class="flex items-center justify-between mb-4">
   <h2 class="text-xl font-bold">Lineout</h2>
   {{ close_btn() }}
@@ -10,6 +10,5 @@
   <input type="hidden" name="type" value="lineout">
   {{ zone_select() }}
   {{ result_radio([("won","Won"),("lost","Lost"),("stolen","Stolen"),("penal_favor","Penal +"),("penal_contra","Penal −")]) }}
-  {{ player_select(required=false) }}
   {{ submit_btn() }}
 </form>

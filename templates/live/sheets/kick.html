@@ -10,6 +10,6 @@
   <input type="hidden" name="type" value="kick">
   {{ zone_select() }}
   {{ result_radio([("recovered","Recovered"),("not_recovered","Not recovered"),("lineout","Lineout")]) }}
-  {{ player_select(required=false) }}
+  {{ player_select(players, required=false) }}
   {{ submit_btn() }}
 </form>
