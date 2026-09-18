@@ -9,15 +9,14 @@
       hx-on::after-request="window.dispatchEvent(new CustomEvent('sheet-done'))">
   <input type="hidden" name="type" value="salida">
 
-  <div class="form-control mb-4">
+  <div class="form-control mb-4" x-data="{ sel: null }">
     <label class="label"><span class="label-text font-medium">Who kicked?</span></label>
     <div class="grid grid-cols-2 gap-2">
       {% for value, label in [("own","Us"),("rival","Them")] %}
-      <label class="cursor-pointer">
-        <input type="radio" name="notes" value="{{ value }}" class="hidden peer" required>
-        <div class="p-3 rounded-lg border-2 border-base-300 text-center text-sm font-semibold
-                    peer-checked:border-primary peer-checked:bg-primary peer-checked:text-primary-content
-                    hover:border-base-content/20 transition-colors select-none">
+      <label class="cursor-pointer" @click="sel = '{{ value }}'">
+        <input type="radio" name="notes" value="{{ value }}" class="hidden" required>
+        <div class="p-3 rounded-lg border-2 text-center text-sm font-semibold transition-colors select-none"
+             :class="sel === '{{ value }}' ? 'border-primary bg-primary text-primary-content' : 'border-base-300 hover:border-base-content/30'">
           {{ label }}
         </div>
       </label>
