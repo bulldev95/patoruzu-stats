@@ -1,14 +1,20 @@
-{% from "live/sheets/_base.html" import close_btn, player_select, result_radio, submit_btn %}
-<div class="flex items-center justify-between mb-4">
-  <h2 class="text-xl font-bold">Turnover / Loss</h2>
-  {{ close_btn() }}
+{% from "live/sheets/_base.html" import close_btn, player_select, result_radio, team_toggle, submit_btn %}
+<div x-data="{ team: 'own' }">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-xl font-bold">Turnover / Loss</h2>
+    {{ close_btn() }}
+  </div>
+  <form hx-post="/live/{{ match_id }}/events"
+        hx-target="#events-feed"
+        hx-swap="innerHTML"
+        hx-on::after-request="window.dispatchEvent(new CustomEvent('sheet-done'))">
+    <input type="hidden" name="type" value="perdida">
+    <input type="hidden" name="team" :value="team">
+    {{ team_toggle() }}
+    {{ result_radio([("knock_on","Knock-on"),("forward_pass","Forward pass"),("penal","Penalty")]) }}
+    <template x-if="team === 'own'">
+      <div>{{ player_select(players, required=false) }}</div>
+    </template>
+    {{ submit_btn() }}
+  </form>
 </div>
-<form hx-post="/live/{{ match_id }}/events"
-      hx-target="#events-feed"
-      hx-swap="innerHTML"
-      hx-on::after-request="window.dispatchEvent(new CustomEvent('sheet-done'))">
-  <input type="hidden" name="type" value="perdida">
-  {{ result_radio([("knock_on","Knock-on"),("forward_pass","Forward pass"),("penal","Penalty")]) }}
-  {{ player_select(players, required=false) }}
-  {{ submit_btn() }}
-</form>

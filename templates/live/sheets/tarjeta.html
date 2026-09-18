@@ -1,52 +1,58 @@
-{% from "live/sheets/_base.html" import close_btn, player_select, submit_btn %}
-<div class="flex items-center justify-between mb-4">
-  <h2 class="text-xl font-bold">Card</h2>
-  {{ close_btn() }}
-</div>
-<form hx-post="/live/{{ match_id }}/events"
-      hx-target="#events-feed"
-      hx-swap="innerHTML"
-      hx-on::after-request="window.dispatchEvent(new CustomEvent('sheet-done'))">
-  <input type="hidden" name="type" value="tarjeta">
+{% from "live/sheets/_base.html" import close_btn, player_select, team_toggle, submit_btn %}
+<div x-data="{ team: 'own' }">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-xl font-bold">Card</h2>
+    {{ close_btn() }}
+  </div>
+  <form hx-post="/live/{{ match_id }}/events"
+        hx-target="#events-feed"
+        hx-swap="innerHTML"
+        hx-on::after-request="window.dispatchEvent(new CustomEvent('sheet-done'))">
+    <input type="hidden" name="type" value="tarjeta">
+    <input type="hidden" name="team" :value="team">
+    {{ team_toggle() }}
 
-  <div class="form-control mb-4" x-data="{ sel: null }">
-    <label class="label"><span class="label-text font-medium">Card type</span></label>
-    <div class="grid grid-cols-3 gap-2">
-      <label class="cursor-pointer" @click="sel = 'yellow'">
-        <input type="radio" name="result" value="yellow" class="hidden" required>
-        <div class="p-3 rounded-lg border-2 text-center text-sm font-semibold transition-colors select-none"
-             :class="sel === 'yellow' ? 'bg-yellow-400 border-yellow-500 text-yellow-900' : 'border-base-300 hover:border-base-content/30'">
-          Yellow
-        </div>
-      </label>
-      <label class="cursor-pointer" @click="sel = 'red'">
-        <input type="radio" name="result" value="red" class="hidden" required>
-        <div class="p-3 rounded-lg border-2 text-center text-sm font-semibold transition-colors select-none"
-             :class="sel === 'red' ? 'bg-red-600 border-red-700 text-white' : 'border-base-300 hover:border-base-content/30'">
-          Red
-        </div>
-      </label>
-      <label class="cursor-pointer" @click="sel = 'red_20'">
-        <input type="radio" name="result" value="red_20" class="hidden" required>
-        <div class="p-3 rounded-lg border-2 text-center text-sm font-semibold transition-colors select-none"
-             :class="sel === 'red_20' ? 'bg-red-200 border-red-400 text-red-900' : 'border-base-300 hover:border-base-content/30'">
-          Red 20
-        </div>
-      </label>
+    <div class="form-control mb-4" x-data="{ sel: null }">
+      <label class="label"><span class="label-text font-medium">Card type</span></label>
+      <div class="grid grid-cols-3 gap-2">
+        <label class="cursor-pointer" @click="sel = 'yellow'">
+          <input type="radio" name="result" value="yellow" class="hidden" required>
+          <div class="p-3 rounded-lg border-2 text-center text-sm font-semibold transition-colors select-none"
+               :class="sel === 'yellow' ? 'bg-yellow-400 border-yellow-500 text-yellow-900' : 'border-base-300 hover:border-base-content/30'">
+            Yellow
+          </div>
+        </label>
+        <label class="cursor-pointer" @click="sel = 'red'">
+          <input type="radio" name="result" value="red" class="hidden" required>
+          <div class="p-3 rounded-lg border-2 text-center text-sm font-semibold transition-colors select-none"
+               :class="sel === 'red' ? 'bg-red-600 border-red-700 text-white' : 'border-base-300 hover:border-base-content/30'">
+            Red
+          </div>
+        </label>
+        <label class="cursor-pointer" @click="sel = 'red_20'">
+          <input type="radio" name="result" value="red_20" class="hidden" required>
+          <div class="p-3 rounded-lg border-2 text-center text-sm font-semibold transition-colors select-none"
+               :class="sel === 'red_20' ? 'bg-red-200 border-red-400 text-red-900' : 'border-base-300 hover:border-base-content/30'">
+            Red 20
+          </div>
+        </label>
+      </div>
     </div>
-  </div>
 
-  {{ player_select(players) }}
+    <template x-if="team === 'own'">
+      <div>{{ player_select(players) }}</div>
+    </template>
 
-  <div class="form-control mb-4">
-    <label class="label"><span class="label-text font-medium">Cause</span></label>
-    <select name="notes" class="select select-bordered w-full" required>
-      <option value="">Select cause…</option>
-      {% for cause in ["High tackle","Dangerous play","Repeated infringement","Dissent","Foul play","Other"] %}
-      <option value="{{ cause | lower | replace(' ', '_') }}">{{ cause }}</option>
-      {% endfor %}
-    </select>
-  </div>
+    <div class="form-control mb-4">
+      <label class="label"><span class="label-text font-medium">Cause</span></label>
+      <select name="notes" class="select select-bordered w-full" required>
+        <option value="">Select cause…</option>
+        {% for cause in ["High tackle","Dangerous play","Repeated infringement","Dissent","Foul play","Other"] %}
+        <option value="{{ cause | lower | replace(' ', '_') }}">{{ cause }}</option>
+        {% endfor %}
+      </select>
+    </div>
 
-  {{ submit_btn() }}
-</form>
+    {{ submit_btn() }}
+  </form>
+</div>

@@ -54,6 +54,23 @@
 </div>
 {% endmacro %}
 
+{% macro team_toggle() %}
+<div class="grid grid-cols-2 gap-0 rounded-lg overflow-hidden border border-base-300 mb-4">
+  <button type="button" @click="team = 'own'"
+          class="py-2 text-sm font-semibold transition-colors select-none"
+          :class="team === 'own' ? 'bg-primary text-primary-content' : 'bg-base-100 text-base-content hover:bg-base-200'">
+    Patoruzú
+  </button>
+  <button type="button" @click="team = 'rival'"
+          class="py-2 text-sm font-semibold transition-colors select-none"
+          :class="team === 'rival' ? 'bg-error text-error-content' : 'bg-base-100 text-base-content hover:bg-base-200'">
+    Rival
+  </button>
+</div>
+{% endmacro %}
+
 {% macro submit_btn(label="Save") %}
-<button type="submit" class="btn btn-primary w-full mt-2">{{ label }}</button>
+<div class="sticky bottom-0 bg-base-100 pt-2 pb-2">
+  <button type="submit" class="btn btn-primary w-full">{{ label }}</button>
+</div>
 {% endmacro %}

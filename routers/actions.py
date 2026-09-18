@@ -93,12 +93,15 @@ async def save_event(request: Request, match_id: str, db: Session = Depends(get_
     zone_raw = form.get("zone")
     player_id = form.get("player_id") or None
     notes = form.get("notes") or None
+    team = form.get("team", "own")
+    if team not in ("own", "rival"):
+        team = "own"
 
     event = Event(
         match_id=match_id,
         minute=calculate_minute(match),
         period=match.period,
-        team="own",
+        team=team,
         type=event_type,
         result=result,
         zone=int(zone_raw) if zone_raw else None,
@@ -109,10 +112,14 @@ async def save_event(request: Request, match_id: str, db: Session = Depends(get_
 
     # Score updates
     deltas = SCORE_DELTA.get(event_type, {})
-    match.score_own += deltas.get(result, deltas.get("any", 0))
+    delta = deltas.get(result, deltas.get("any", 0))
+    if team == "own":
+        match.score_own += delta
+    else:
+        match.score_rival += delta
 
-    # Player stat updates
-    if player_id:
+    # Player stat updates — only for own team
+    if team == "own" and player_id:
         player = db.query(Player).filter_by(id=player_id).first()
         if player:
             _update_player_stats(player, event_type, result)
@@ -125,15 +132,18 @@ async def save_event(request: Request, match_id: str, db: Session = Depends(get_
             match_id=match_id,
             minute=calculate_minute(match),
             period=match.period,
-            team="own",
+            team=team,
             type="conversion",
             result=conv_result,
             player_id=conv_player_id,
         )
         db.add(conv_event)
         if conv_result == "scored":
-            match.score_own += 2
-        if conv_player_id:
+            if team == "own":
+                match.score_own += 2
+            else:
+                match.score_rival += 2
+        if team == "own" and conv_player_id:
             conv_player = db.query(Player).filter_by(id=conv_player_id).first()
             if conv_player:
                 _update_player_stats(conv_player, "conversion", conv_result)

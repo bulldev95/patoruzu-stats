@@ -450,3 +450,65 @@ class TestPlayerStats:
         from models import Player
         players = db.query(Player).all()
         assert all(p.tries == 0 for p in players)
+
+
+class TestRivalEvents:
+    def test_rival_event_stored_with_team_rival(self, client, sample_match, db):
+        client.post(f"/live/{sample_match.id}/events", data=event_form("tackle", "positive", team="rival"))
+        event = db.query(Event).filter_by(match_id=sample_match.id).first()
+        assert event.team == "rival"
+
+    def test_rival_try_adds_to_score_rival(self, client, sample_match, db):
+        client.post(f"/live/{sample_match.id}/events", data=event_form("try", "scored", team="rival"))
+        db.refresh(sample_match)
+        assert sample_match.score_rival == 5
+        assert sample_match.score_own == 0
+
+    def test_rival_conversion_adds_to_score_rival(self, client, sample_match, db):
+        client.post(f"/live/{sample_match.id}/events", data=event_form("conversion", "scored", team="rival"))
+        db.refresh(sample_match)
+        assert sample_match.score_rival == 2
+        assert sample_match.score_own == 0
+
+    def test_rival_drop_scored_adds_to_score_rival(self, client, sample_match, db):
+        client.post(f"/live/{sample_match.id}/events", data=event_form("drop", "scored", team="rival"))
+        db.refresh(sample_match)
+        assert sample_match.score_rival == 3
+        assert sample_match.score_own == 0
+
+    def test_rival_penal_kicked_adds_to_score_rival(self, client, sample_match, db):
+        client.post(f"/live/{sample_match.id}/events", data=event_form("penal", "kicked", team="rival"))
+        db.refresh(sample_match)
+        assert sample_match.score_rival == 3
+        assert sample_match.score_own == 0
+
+    def test_rival_event_does_not_update_player_stats(self, client, sample_match, db):
+        from models import MatchPlayer, Player
+        pid = db.query(MatchPlayer).filter_by(match_id=sample_match.id, number=1).first().player_id
+        client.post(f"/live/{sample_match.id}/events",
+                    data=event_form("try", "scored", team="rival", player_id=pid))
+        player = db.query(Player).filter_by(id=pid).first()
+        db.refresh(player)
+        assert player.tries == 0
+
+    def test_rival_try_with_conversion_scored_adds_7_to_score_rival(self, client, sample_match, db):
+        data = event_form("try", "scored", team="rival")
+        data["conversion_attempted"] = "yes"
+        data["conversion_result"] = "scored"
+        client.post(f"/live/{sample_match.id}/events", data=data)
+        db.refresh(sample_match)
+        assert sample_match.score_rival == 7
+        assert sample_match.score_own == 0
+
+    def test_rival_try_with_conversion_team_stored_correctly(self, client, sample_match, db):
+        data = event_form("try", "scored", team="rival")
+        data["conversion_attempted"] = "yes"
+        data["conversion_result"] = "scored"
+        client.post(f"/live/{sample_match.id}/events", data=data)
+        events = db.query(Event).filter_by(match_id=sample_match.id).all()
+        assert all(e.team == "rival" for e in events)
+
+    def test_invalid_team_defaults_to_own(self, client, sample_match, db):
+        client.post(f"/live/{sample_match.id}/events", data=event_form("tackle", "positive", team="invalid"))
+        event = db.query(Event).filter_by(match_id=sample_match.id).first()
+        assert event.team == "own"

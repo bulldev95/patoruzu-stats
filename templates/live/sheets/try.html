@@ -1,5 +1,5 @@
-{% from "live/sheets/_base.html" import close_btn, zone_select, submit_btn %}
-<div x-data="{ conv: true }">
+{% from "live/sheets/_base.html" import close_btn, zone_select, team_toggle, submit_btn %}
+<div x-data="{ conv: true, team: 'own' }">
 
   <div class="flex items-center justify-between mb-4">
     <h2 class="text-xl font-bold">Try <span class="badge badge-success">+5</span></h2>
@@ -12,19 +12,25 @@
         hx-on::after-request="window.dispatchEvent(new CustomEvent('sheet-done'))">
     <input type="hidden" name="type" value="try">
     <input type="hidden" name="result" value="scored">
+    <input type="hidden" name="team" :value="team">
     <input type="hidden" name="conversion_attempted" :value="conv ? 'yes' : 'no'">
 
-    <!-- Try scorer -->
-    <p class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-2">Try scorer</p>
-    <div class="form-control mb-3">
-      <select name="player_id" class="select select-bordered w-full" required>
-        {% for mp, player in players %}
-        <option value="{{ player.id }}">{{ mp.number }} – {{ player.surname }}, {{ player.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
+    {{ team_toggle() }}
 
-    {{ zone_select() }}
+    <!-- Try scorer (own only) -->
+    <template x-if="team === 'own'">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-2">Try scorer</p>
+        <div class="form-control mb-3">
+          <select name="player_id" class="select select-bordered w-full" required>
+            {% for mp, player in players %}
+            <option value="{{ player.id }}">{{ mp.number }} – {{ player.surname }}, {{ player.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {{ zone_select() }}
+      </div>
+    </template>
 
     <div class="divider my-2"></div>
 
@@ -39,17 +45,20 @@
       </button>
     </div>
 
-    <!-- Conversion fields (removed from DOM when skipped) -->
+    <!-- Conversion fields -->
     <template x-if="conv">
       <div x-data="{ sel: null }">
-        <div class="form-control mb-3">
-          <label class="label"><span class="label-text font-medium">Kicker</span></label>
-          <select name="conversion_player_id" class="select select-bordered w-full" required>
-            {% for mp, player in players %}
-            <option value="{{ player.id }}">{{ mp.number }} – {{ player.surname }}, {{ player.name }}</option>
-            {% endfor %}
-          </select>
-        </div>
+        <!-- Kicker (own only) -->
+        <template x-if="team === 'own'">
+          <div class="form-control mb-3">
+            <label class="label"><span class="label-text font-medium">Kicker</span></label>
+            <select name="conversion_player_id" class="select select-bordered w-full" required>
+              {% for mp, player in players %}
+              <option value="{{ player.id }}">{{ mp.number }} – {{ player.surname }}, {{ player.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </template>
 
         <div class="form-control mb-4">
           <label class="label"><span class="label-text font-medium">Result</span></label>
