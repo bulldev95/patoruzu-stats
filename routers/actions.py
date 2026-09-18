@@ -159,6 +159,41 @@ async def save_event(request: Request, match_id: str, db: Session = Depends(get_
     })
 
 
+# ── Event delete ───────────────────────────────────────────────────────────
+
+@router.delete("/{match_id}/events/{event_id}", response_class=HTMLResponse)
+async def delete_event(request: Request, match_id: str, event_id: str, db: Session = Depends(get_db)):
+    match = _get_match(match_id, db)
+    event = db.query(Event).filter_by(id=event_id, match_id=match_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    # Revert score
+    deltas = SCORE_DELTA.get(event.type, {})
+    delta = deltas.get(event.result, deltas.get("any", 0))
+    if event.team == "own":
+        match.score_own = max(0, match.score_own - delta)
+    else:
+        match.score_rival = max(0, match.score_rival - delta)
+
+    # Revert player stats (own only)
+    if event.team == "own" and event.player_id:
+        player = db.query(Player).filter_by(id=event.player_id).first()
+        if player:
+            _revert_player_stats(player, event.type, event.result)
+
+    db.delete(event)
+    db.commit()
+    db.refresh(match)
+
+    events = get_recent_events(match_id, db)
+    return templates.TemplateResponse("live/partials/events_feed.html", {
+        "request": request,
+        "match": match,
+        "events": events,
+    })
+
+
 # ── Helpers ────────────────────────────────────────────────────────────────
 
 def _get_match(match_id: str, db: Session) -> Match:
@@ -207,3 +242,37 @@ def _update_player_stats(player: Player, event_type: str, result: str) -> None:
         player.turnovers += 1
     elif event_type == "lineout" and result in ("won", "stolen"):
         player.lineouts += 1
+
+
+def _revert_player_stats(player: Player, event_type: str, result: str) -> None:
+    if event_type == "try":
+        player.tries = max(0, player.tries - 1)
+    elif event_type == "conversion":
+        player.conversions_attempts = max(0, player.conversions_attempts - 1)
+        if result == "scored":
+            player.conversions_scored = max(0, player.conversions_scored - 1)
+    elif event_type == "drop":
+        player.drops_attempts = max(0, player.drops_attempts - 1)
+        if result == "scored":
+            player.drops_scored = max(0, player.drops_scored - 1)
+    elif event_type == "penal" and result == "kicked":
+        player.penals_scored = max(0, player.penals_scored - 1)
+    elif event_type == "tackle":
+        player.tackles_total = max(0, player.tackles_total - 1)
+        if result == "positive":
+            player.tackles_positive = max(0, player.tackles_positive - 1)
+        else:
+            player.tackles_missed = max(0, player.tackles_missed - 1)
+    elif event_type == "tarjeta":
+        if result == "yellow":
+            player.yellow_cards = max(0, player.yellow_cards - 1)
+        elif result == "red":
+            player.red_cards = max(0, player.red_cards - 1)
+        elif result == "red_20":
+            player.red_cards_20min = max(0, player.red_cards_20min - 1)
+    elif event_type == "kick":
+        player.kicks = max(0, player.kicks - 1)
+    elif event_type == "perdida":
+        player.turnovers = max(0, player.turnovers - 1)
+    elif event_type == "lineout" and result in ("won", "stolen"):
+        player.lineouts = max(0, player.lineouts - 1)

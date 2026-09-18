@@ -10,9 +10,14 @@
     <span class="badge badge-sm {{ 'badge-primary' if event.team == 'own' else 'badge-error' }}">
       {{ 'PAT' if event.team == 'own' else 'RIV' }}
     </span>
-    <span class="font-medium capitalize">{{ event.type }}</span>
+    <span class="font-medium capitalize flex-1">{{ event.type }}</span>
     <span class="text-base-content/60 text-sm">{{ event.result }}</span>
     {% if event.zone %}<span class="badge badge-sm badge-outline">Z{{ event.zone }}</span>{% endif %}
+    <button
+      hx-delete="/live/{{ match.id }}/events/{{ event.id }}"
+      hx-target="#events-feed"
+      hx-swap="innerHTML"
+      class="btn btn-ghost btn-xs text-error px-1">✕</button>
   </div>
   {% endfor %}
 {% else %}

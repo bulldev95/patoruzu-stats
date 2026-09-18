@@ -512,3 +512,262 @@ class TestRivalEvents:
         client.post(f"/live/{sample_match.id}/events", data=event_form("tackle", "positive", team="invalid"))
         event = db.query(Event).filter_by(match_id=sample_match.id).first()
         assert event.team == "own"
+
+
+class TestDeleteEvent:
+    def _save(self, client, match_id, event_type="tackle", result="positive", **extra):
+        data = event_form(event_type, result, **extra)
+        client.post(f"/live/{match_id}/events", data=data)
+        return db_event_id(client, match_id)
+
+    def _player_id(self, sample_match, db):
+        from models import MatchPlayer
+        return db.query(MatchPlayer).filter_by(match_id=sample_match.id, number=1).first().player_id
+
+    def test_delete_removes_event(self, client, sample_match, db):
+        client.post(f"/live/{sample_match.id}/events", data=event_form("tackle", "positive"))
+        event = db.query(Event).filter_by(match_id=sample_match.id).first()
+        client.delete(f"/live/{sample_match.id}/events/{event.id}")
+        assert db.query(Event).filter_by(match_id=sample_match.id).count() == 0
+
+    def test_delete_returns_events_feed_html(self, client, sample_match, db):
+        client.post(f"/live/{sample_match.id}/events", data=event_form("tackle", "positive"))
+        event = db.query(Event).filter_by(match_id=sample_match.id).first()
+        response = client.delete(f"/live/{sample_match.id}/events/{event.id}")
+        assert response.status_code == 200
+        assert "<html>" not in response.text
+
+    def test_delete_invalid_event_returns_404(self, client, sample_match):
+        response = client.delete(f"/live/{sample_match.id}/events/nonexistent")
+        assert response.status_code == 404
+
+    def test_delete_event_wrong_match_returns_404(self, client, sample_match, db):
+        client.post(f"/live/{sample_match.id}/events", data=event_form("tackle", "positive"))
+        event = db.query(Event).filter_by(match_id=sample_match.id).first()
+        response = client.delete(f"/live/nonexistent/events/{event.id}")
+        assert response.status_code == 404
+
+    def test_delete_try_reverts_score_own(self, client, sample_match, db):
+        client.post(f"/live/{sample_match.id}/events", data=event_form("try", "scored"))
+        event = db.query(Event).filter_by(match_id=sample_match.id).first()
+        client.delete(f"/live/{sample_match.id}/events/{event.id}")
+        db.refresh(sample_match)
+        assert sample_match.score_own == 0
+
+    def test_delete_conversion_scored_reverts_score_own(self, client, sample_match, db):
+        client.post(f"/live/{sample_match.id}/events", data=event_form("conversion", "scored"))
+        event = db.query(Event).filter_by(match_id=sample_match.id).first()
+        client.delete(f"/live/{sample_match.id}/events/{event.id}")
+        db.refresh(sample_match)
+        assert sample_match.score_own == 0
+
+    def test_delete_drop_scored_reverts_score_own(self, client, sample_match, db):
+        client.post(f"/live/{sample_match.id}/events", data=event_form("drop", "scored"))
+        event = db.query(Event).filter_by(match_id=sample_match.id).first()
+        client.delete(f"/live/{sample_match.id}/events/{event.id}")
+        db.refresh(sample_match)
+        assert sample_match.score_own == 0
+
+    def test_delete_penal_kicked_reverts_score_own(self, client, sample_match, db):
+        client.post(f"/live/{sample_match.id}/events", data=event_form("penal", "kicked"))
+        event = db.query(Event).filter_by(match_id=sample_match.id).first()
+        client.delete(f"/live/{sample_match.id}/events/{event.id}")
+        db.refresh(sample_match)
+        assert sample_match.score_own == 0
+
+    def test_delete_rival_try_reverts_score_rival(self, client, sample_match, db):
+        client.post(f"/live/{sample_match.id}/events", data=event_form("try", "scored", team="rival"))
+        event = db.query(Event).filter_by(match_id=sample_match.id).first()
+        client.delete(f"/live/{sample_match.id}/events/{event.id}")
+        db.refresh(sample_match)
+        assert sample_match.score_rival == 0
+
+    def test_delete_score_does_not_go_below_zero(self, client, sample_match, db):
+        client.post(f"/live/{sample_match.id}/events", data=event_form("tackle", "positive"))
+        event = db.query(Event).filter_by(match_id=sample_match.id).first()
+        event.type = "try"
+        event.result = "scored"
+        sample_match.score_own = 0
+        db.commit()
+        client.delete(f"/live/{sample_match.id}/events/{event.id}")
+        db.refresh(sample_match)
+        assert sample_match.score_own == 0
+
+    def test_delete_try_reverts_player_tries(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("try", "scored", player_id=pid))
+        event = db.query(Event).filter_by(match_id=sample_match.id).first()
+        client.delete(f"/live/{sample_match.id}/events/{event.id}")
+        from models import Player
+        player = db.query(Player).filter_by(id=pid).first()
+        db.refresh(player)
+        assert player.tries == 0
+
+    def test_delete_conversion_scored_reverts_player_stats(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("conversion", "scored", player_id=pid))
+        event = db.query(Event).filter_by(match_id=sample_match.id).first()
+        client.delete(f"/live/{sample_match.id}/events/{event.id}")
+        from models import Player
+        player = db.query(Player).filter_by(id=pid).first()
+        db.refresh(player)
+        assert player.conversions_attempts == 0
+        assert player.conversions_scored == 0
+
+    def test_delete_conversion_missed_reverts_attempts_only(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("conversion", "missed", player_id=pid))
+        event = db.query(Event).filter_by(match_id=sample_match.id).first()
+        client.delete(f"/live/{sample_match.id}/events/{event.id}")
+        from models import Player
+        player = db.query(Player).filter_by(id=pid).first()
+        db.refresh(player)
+        assert player.conversions_attempts == 0
+
+    def test_delete_drop_scored_reverts_player_stats(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("drop", "scored", player_id=pid))
+        event = db.query(Event).filter_by(match_id=sample_match.id).first()
+        client.delete(f"/live/{sample_match.id}/events/{event.id}")
+        from models import Player
+        player = db.query(Player).filter_by(id=pid).first()
+        db.refresh(player)
+        assert player.drops_attempts == 0
+        assert player.drops_scored == 0
+
+    def test_delete_drop_missed_reverts_attempts_only(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("drop", "missed", player_id=pid))
+        event = db.query(Event).filter_by(match_id=sample_match.id).first()
+        client.delete(f"/live/{sample_match.id}/events/{event.id}")
+        from models import Player
+        player = db.query(Player).filter_by(id=pid).first()
+        db.refresh(player)
+        assert player.drops_attempts == 0
+        assert player.drops_scored == 0
+
+    def test_delete_penal_kicked_reverts_penals_scored(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("penal", "kicked", player_id=pid))
+        event = db.query(Event).filter_by(match_id=sample_match.id).first()
+        client.delete(f"/live/{sample_match.id}/events/{event.id}")
+        from models import Player
+        player = db.query(Player).filter_by(id=pid).first()
+        db.refresh(player)
+        assert player.penals_scored == 0
+
+    def test_delete_tackle_positive_reverts_tackles(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("tackle", "positive", player_id=pid))
+        event = db.query(Event).filter_by(match_id=sample_match.id).first()
+        client.delete(f"/live/{sample_match.id}/events/{event.id}")
+        from models import Player
+        player = db.query(Player).filter_by(id=pid).first()
+        db.refresh(player)
+        assert player.tackles_total == 0
+        assert player.tackles_positive == 0
+
+    def test_delete_tackle_missed_reverts_tackles(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("tackle", "missed", player_id=pid))
+        event = db.query(Event).filter_by(match_id=sample_match.id).first()
+        client.delete(f"/live/{sample_match.id}/events/{event.id}")
+        from models import Player
+        player = db.query(Player).filter_by(id=pid).first()
+        db.refresh(player)
+        assert player.tackles_total == 0
+        assert player.tackles_missed == 0
+
+    def test_delete_yellow_card_reverts_yellow_cards(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("tarjeta", "yellow", player_id=pid))
+        event = db.query(Event).filter_by(match_id=sample_match.id).first()
+        client.delete(f"/live/{sample_match.id}/events/{event.id}")
+        from models import Player
+        player = db.query(Player).filter_by(id=pid).first()
+        db.refresh(player)
+        assert player.yellow_cards == 0
+
+    def test_delete_red_card_reverts_red_cards(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("tarjeta", "red", player_id=pid))
+        event = db.query(Event).filter_by(match_id=sample_match.id).first()
+        client.delete(f"/live/{sample_match.id}/events/{event.id}")
+        from models import Player
+        player = db.query(Player).filter_by(id=pid).first()
+        db.refresh(player)
+        assert player.red_cards == 0
+
+    def test_delete_red_card_20min_reverts_red_cards_20min(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("tarjeta", "red_20", player_id=pid))
+        event = db.query(Event).filter_by(match_id=sample_match.id).first()
+        client.delete(f"/live/{sample_match.id}/events/{event.id}")
+        from models import Player
+        player = db.query(Player).filter_by(id=pid).first()
+        db.refresh(player)
+        assert player.red_cards_20min == 0
+
+    def test_delete_kick_reverts_kicks(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("kick", "recovered", player_id=pid))
+        event = db.query(Event).filter_by(match_id=sample_match.id).first()
+        client.delete(f"/live/{sample_match.id}/events/{event.id}")
+        from models import Player
+        player = db.query(Player).filter_by(id=pid).first()
+        db.refresh(player)
+        assert player.kicks == 0
+
+    def test_delete_perdida_reverts_turnovers(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("perdida", "knock_on", player_id=pid))
+        event = db.query(Event).filter_by(match_id=sample_match.id).first()
+        client.delete(f"/live/{sample_match.id}/events/{event.id}")
+        from models import Player
+        player = db.query(Player).filter_by(id=pid).first()
+        db.refresh(player)
+        assert player.turnovers == 0
+
+    def test_delete_lineout_won_reverts_lineouts(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("lineout", "won", player_id=pid))
+        event = db.query(Event).filter_by(match_id=sample_match.id).first()
+        client.delete(f"/live/{sample_match.id}/events/{event.id}")
+        from models import Player
+        player = db.query(Player).filter_by(id=pid).first()
+        db.refresh(player)
+        assert player.lineouts == 0
+
+    def test_delete_lineout_stolen_reverts_lineouts(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("lineout", "stolen", player_id=pid))
+        event = db.query(Event).filter_by(match_id=sample_match.id).first()
+        client.delete(f"/live/{sample_match.id}/events/{event.id}")
+        from models import Player
+        player = db.query(Player).filter_by(id=pid).first()
+        db.refresh(player)
+        assert player.lineouts == 0
+
+    def test_delete_rival_event_does_not_revert_player_stats(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        from models import Player
+        player = db.query(Player).filter_by(id=pid).first()
+        player.tries = 3
+        db.commit()
+        client.post(f"/live/{sample_match.id}/events", data=event_form("try", "scored", team="rival", player_id=pid))
+        event = db.query(Event).filter_by(match_id=sample_match.id).first()
+        client.delete(f"/live/{sample_match.id}/events/{event.id}")
+        db.refresh(player)
+        assert player.tries == 3
+
+    def test_delete_no_player_id_skips_stat_revert(self, client, sample_match, db):
+        client.post(f"/live/{sample_match.id}/events", data=event_form("try", "scored"))
+        event = db.query(Event).filter_by(match_id=sample_match.id).first()
+        response = client.delete(f"/live/{sample_match.id}/events/{event.id}")
+        assert response.status_code == 200
+
+    def test_delete_oob_score_in_response(self, client, sample_match, db):
+        client.post(f"/live/{sample_match.id}/events", data=event_form("try", "scored"))
+        event = db.query(Event).filter_by(match_id=sample_match.id).first()
+        response = client.delete(f"/live/{sample_match.id}/events/{event.id}")
+        assert 'id="score-own"' in response.text
