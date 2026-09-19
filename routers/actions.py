@@ -5,7 +5,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models import Event, Match, Player
+from models import Event, Match, MatchPlayer, Player, Substitution
 from utils.match_utils import calculate_minute, get_active_players, get_recent_events
 
 router = APIRouter(prefix="/live")
@@ -156,6 +156,99 @@ async def save_event(request: Request, match_id: str, db: Session = Depends(get_
         "request": request,
         "match": match,
         "events": events,
+    })
+
+
+# ── Substitution ───────────────────────────────────────────────────────────
+
+@router.get("/{match_id}/substitutions/sheet", response_class=HTMLResponse)
+async def substitution_sheet(
+    request: Request,
+    match_id: str,
+    player_out_id: str,
+    db: Session = Depends(get_db),
+):
+    _get_match(match_id, db)
+    mp_out = db.query(MatchPlayer).filter_by(match_id=match_id, player_id=player_out_id).first()
+    if not mp_out:
+        raise HTTPException(status_code=404, detail="Player not found in this match")
+    player_out = db.query(Player).filter_by(id=player_out_id).first()
+
+    bench = (
+        db.query(MatchPlayer, Player)
+        .join(Player, MatchPlayer.player_id == Player.id)
+        .filter(
+            MatchPlayer.match_id == match_id,
+            MatchPlayer.is_starter == False,
+            MatchPlayer.minute_in == -1,
+            MatchPlayer.minute_out.is_(None),
+        )
+        .order_by(MatchPlayer.number)
+        .all()
+    )
+
+    return templates.TemplateResponse("live/sheets/substitution.html", {
+        "request": request,
+        "match_id": match_id,
+        "player_out": player_out,
+        "player_out_mp": mp_out,
+        "bench": bench,
+    })
+
+
+@router.post("/{match_id}/substitutions", response_class=HTMLResponse)
+async def save_substitution(request: Request, match_id: str, db: Session = Depends(get_db)):
+    match = _get_match(match_id, db)
+    form = await request.form()
+    player_out_id = form.get("player_out_id")
+    player_in_id = form.get("player_in_id")
+    position = form.get("position", "")
+
+    mp_out = db.query(MatchPlayer).filter_by(match_id=match_id, player_id=player_out_id).first()
+    mp_in = db.query(MatchPlayer).filter_by(match_id=match_id, player_id=player_in_id).first()
+    if not mp_out or not mp_in:
+        raise HTTPException(status_code=404, detail="Player not found in this match")
+
+    minute = calculate_minute(match)
+
+    sub = Substitution(
+        match_id=match_id,
+        minute=minute,
+        player_out_id=player_out_id,
+        player_in_id=player_in_id,
+        position=position,
+    )
+    db.add(sub)
+
+    mp_out.minute_out = minute
+    mp_in.minute_in = minute
+    mp_in.position = position
+
+    db.commit()
+
+    from utils.match_utils import get_active_players
+    active = get_active_players(match_id, db)
+    starters = [{"mp": mp, "player": p} for mp, p in active]
+
+    bench_rows = (
+        db.query(MatchPlayer, Player)
+        .join(Player, MatchPlayer.player_id == Player.id)
+        .filter(
+            MatchPlayer.match_id == match_id,
+            MatchPlayer.is_starter == False,
+            MatchPlayer.minute_in == -1,
+            MatchPlayer.minute_out.is_(None),
+        )
+        .order_by(MatchPlayer.number)
+        .all()
+    )
+    bench = [{"mp": mp, "player": p} for mp, p in bench_rows]
+
+    return templates.TemplateResponse("live/partials/on_field.html", {
+        "request": request,
+        "match": match,
+        "starters": starters,
+        "bench": bench,
     })
 
 

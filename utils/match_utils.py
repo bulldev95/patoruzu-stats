@@ -12,15 +12,15 @@ def calculate_minute(match) -> int:
 
 
 def get_active_players(match_id: str, db: Session) -> list:
-    """Players currently on the field (starters not yet replaced).
-    Step 9 will extend this to include subs who have come on."""
+    """Players currently on the field: starters (minute_in=0) + subs who came on (minute_in>=0).
+    Bench players have minute_in=-1 until they enter."""
     return (
         db.query(MatchPlayer, Player)
         .join(Player, MatchPlayer.player_id == Player.id)
         .filter(
             MatchPlayer.match_id == match_id,
-            MatchPlayer.is_starter == True,
             MatchPlayer.minute_out.is_(None),
+            MatchPlayer.minute_in >= 0,
         )
         .order_by(MatchPlayer.number)
         .all()

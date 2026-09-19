@@ -1,0 +1,61 @@
+<!-- OOB: update bench -->
+<div id="bench-content" hx-swap-oob="true">
+  <h2 class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-2">
+    Bench ({{ bench | length }})
+  </h2>
+  <div class="grid grid-cols-2 gap-x-4 gap-y-0.5">
+    {% for item in bench %}
+    <div class="flex items-center gap-2">
+      <span class="w-6 text-center font-mono text-sm text-base-content/50">{{ item.mp.number }}</span>
+      <span class="text-sm truncate">{{ item.player.surname }}, {{ item.player.name }}</span>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- On the field (main target: #on-field) -->
+<h2 class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-2">
+  On the field ({{ starters | length }})
+</h2>
+<div class="grid grid-cols-2 gap-x-3">
+  {% for col_start, col_end in [(1, 9), (9, 16)] %}
+  <div class="space-y-1">
+    {% for item in starters if col_start <= item.mp.number < col_end %}
+    <div class="flex items-center gap-2 py-0.5">
+      <span class="w-6 text-center font-bold font-mono text-sm">{{ item.mp.number }}</span>
+      <div class="flex-1 min-w-0">
+        <div class="font-medium text-sm truncate">{{ item.player.surname }}, {{ item.player.name }}</div>
+        <div class="text-xs text-base-content/40 truncate">{{ item.mp.position }}</div>
+      </div>
+      <button
+        hx-get="/live/{{ match.id }}/substitutions/sheet?player_out_id={{ item.mp.player_id }}"
+        hx-target="#sheet-content"
+        hx-swap="innerHTML"
+        @click="sheetOpen = true"
+        class="btn btn-ghost btn-xs text-base-content/30 px-1">⇄</button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</div>
+{% set subs_on = [] %}
+{% for item in starters %}{% if item.mp.number >= 16 %}{% set _ = subs_on.append(item) %}{% endif %}{% endfor %}
+{% if subs_on %}
+<div class="mt-2 pt-2 border-t border-base-200 space-y-1">
+  {% for item in subs_on %}
+  <div class="flex items-center gap-2 py-0.5">
+    <span class="w-6 text-center font-bold font-mono text-sm">{{ item.mp.number }}</span>
+    <div class="flex-1 min-w-0">
+      <div class="font-medium text-sm truncate">{{ item.player.surname }}, {{ item.player.name }}</div>
+      <div class="text-xs text-base-content/40 truncate">{{ item.mp.position }}</div>
+    </div>
+    <button
+      hx-get="/live/{{ match.id }}/substitutions/sheet?player_out_id={{ item.mp.player_id }}"
+      hx-target="#sheet-content"
+      hx-swap="innerHTML"
+      @click="sheetOpen = true"
+      class="btn btn-ghost btn-xs text-base-content/30 px-1">⇄</button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
