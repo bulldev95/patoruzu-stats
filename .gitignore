@@ -4,3 +4,5 @@ __pycache__/
 patoruzu.db
 .env
 nohup.out
+.coverage
+*.pdf
