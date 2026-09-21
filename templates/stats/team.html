@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Estadísticas del equipo — Patoruzú</title>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-base-200 min-h-screen">
+
+  <div class="max-w-2xl mx-auto p-4">
+
+    <div class="flex items-center gap-3 mb-6">
+      <a href="/" class="btn btn-ghost btn-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </a>
+      <h1 class="text-2xl font-bold">Estadísticas del equipo</h1>
+    </div>
+
+    {% if not matches %}
+    <div class="card bg-base-100 shadow">
+      <div class="card-body items-center text-center py-12">
+        <p class="text-base-content/50">No hay partidos registrados todavía.</p>
+      </div>
+    </div>
+    {% else %}
+
+    <!-- Resumen global -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+      <div class="stat bg-base-100 rounded-box shadow p-4">
+        <div class="stat-title text-xs">Partidos</div>
+        <div class="stat-value text-2xl">{{ totals.matches }}</div>
+      </div>
+      <div class="stat bg-base-100 rounded-box shadow p-4">
+        <div class="stat-title text-xs">Victorias</div>
+        <div class="stat-value text-2xl text-success">{{ totals.wins }}</div>
+      </div>
+      <div class="stat bg-base-100 rounded-box shadow p-4">
+        <div class="stat-title text-xs">Derrotas</div>
+        <div class="stat-value text-2xl text-error">{{ totals.losses }}</div>
+      </div>
+      <div class="stat bg-base-100 rounded-box shadow p-4">
+        <div class="stat-title text-xs">Empates</div>
+        <div class="stat-value text-2xl">{{ totals.draws }}</div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+      <div class="stat bg-base-100 rounded-box shadow p-4">
+        <div class="stat-title text-xs">Puntos anotados</div>
+        <div class="stat-value text-2xl">{{ totals.points_for }}</div>
+      </div>
+      <div class="stat bg-base-100 rounded-box shadow p-4">
+        <div class="stat-title text-xs">Puntos recibidos</div>
+        <div class="stat-value text-2xl">{{ totals.points_against }}</div>
+      </div>
+      <div class="stat bg-base-100 rounded-box shadow p-4">
+        <div class="stat-title text-xs">Diferencia</div>
+        {% set diff = totals.points_for - totals.points_against %}
+        <div class="stat-value text-2xl {% if diff > 0 %}text-success{% elif diff < 0 %}text-error{% endif %}">
+          {{ "+" if diff > 0 else "" }}{{ diff }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Historial de partidos -->
+    <h2 class="text-lg font-semibold mb-3">Historial</h2>
+    <div class="flex flex-col gap-2">
+      {% for m in matches %}
+      <div class="card bg-base-100 shadow-sm">
+        <div class="card-body p-4 flex-row items-center justify-between">
+          <div>
+            <div class="font-semibold">vs {{ m.rival }}</div>
+            <div class="text-xs text-base-content/50">{{ m.date }} · {{ m.competition }}</div>
+          </div>
+          <div class="text-right">
+            <div class="text-xl font-bold tabular-nums">
+              {{ m.score_own }} – {{ m.score_rival }}
+            </div>
+            <div class="badge badge-sm {% if m.score_own > m.score_rival %}badge-success{% elif m.score_own < m.score_rival %}badge-error{% else %}badge-neutral{% endif %}">
+              {% if m.score_own > m.score_rival %}Victoria{% elif m.score_own < m.score_rival %}Derrota{% else %}Empate{% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% endif %}
+  </div>
+
+</body>
+</html>
