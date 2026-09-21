@@ -82,7 +82,7 @@
         </thead>
         <tbody>
           {% for p in players %}
-          <tr class="hover">
+          <tr class="hover cursor-pointer" onclick="location.href='/stats/players/{{ p.id }}'">
             <td>
               <div class="font-semibold text-sm">{{ p.surname }}</div>
               <div class="text-xs text-base-content/50">{{ p.name }}</div>
