@@ -103,17 +103,29 @@ events_a = [
     ev(MA, 69, "own", "conversion", "scored",  "cardoso"),
     # Patoruzú — tackles
     ev(MA,  7, "own", "tackle",     "positive","barrera"),
+    ev(MA,  9, "own", "tackle",     "negative","ortiz"),
     ev(MA, 10, "own", "tackle",     "positive","bellido"),
+    ev(MA, 13, "own", "tackle",     "negative","achigar"),
     ev(MA, 15, "own", "tackle",     "negative","murillo"),
+    ev(MA, 17, "own", "tackle",     "negative","ramos"),
     ev(MA, 18, "own", "tackle",     "positive","achigar"),
     ev(MA, 22, "own", "tackle",     "missed",  "roldan"),
     ev(MA, 23, "own", "tackle",     "positive","bellido"),
+    ev(MA, 26, "own", "tackle",     "negative","portillo"),
     ev(MA, 28, "own", "tackle",     "negative","bellido"),
+    ev(MA, 31, "own", "tackle",     "negative","apraiz_v"),
     ev(MA, 33, "own", "tackle",     "positive","achigar"),
+    ev(MA, 37, "own", "tackle",     "negative","velazquez"),
     ev(MA, 40, "own", "tackle",     "positive","murillo"),
+    ev(MA, 43, "own", "tackle",     "negative","murillo"),
     ev(MA, 45, "own", "tackle",     "positive","bellido"),
+    ev(MA, 50, "own", "tackle",     "negative","barrera"),
     ev(MA, 52, "own", "tackle",     "negative","portillo"),
+    ev(MA, 56, "own", "tackle",     "missed",  "ortiz"),
     ev(MA, 58, "own", "tackle",     "positive","murillo"),
+    ev(MA, 63, "own", "tackle",     "negative","achigar"),
+    ev(MA, 67, "own", "tackle",     "negative","keller"),
+    ev(MA, 70, "own", "tackle",     "negative","fernandez"),
     ev(MA, 74, "own", "tackle",     "positive","murillo"),
     ev(MA, 77, "own", "tackle",     "positive","portillo"),
     # Patoruzú — scrums
@@ -163,25 +175,37 @@ events_b = [
     ev(MB, 77, "own", "conversion", "scored",  "cardoso"),
     # Patoruzú — tackles (partido físico)
     ev(MB,  6, "own", "tackle",     "positive","achigar"),
+    ev(MB,  8, "own", "tackle",     "negative","roldan"),
+    ev(MB, 11, "own", "tackle",     "negative","portillo"),
     ev(MB, 12, "own", "tackle",     "positive","bellido"),
     ev(MB, 14, "own", "tackle",     "negative","murillo"),
+    ev(MB, 15, "own", "tackle",     "negative","barrera"),
     ev(MB, 16, "own", "tackle",     "positive","apraiz_v"),
     ev(MB, 18, "own", "tackle",     "positive","murillo"),
+    ev(MB, 20, "own", "tackle",     "negative","apraiz_v"),
     ev(MB, 21, "own", "tackle",     "positive","portillo"),
+    ev(MB, 24, "own", "tackle",     "negative","ortiz"),
     ev(MB, 25, "own", "tackle",     "positive","bellido"),
     ev(MB, 28, "own", "tackle",     "negative","achigar"),
+    ev(MB, 29, "own", "tackle",     "negative","ramos"),
     ev(MB, 30, "own", "tackle",     "missed",  "ramos"),
     ev(MB, 33, "own", "tackle",     "positive","achigar"),
+    ev(MB, 36, "own", "tackle",     "negative","sanmartin"),
     ev(MB, 38, "own", "tackle",     "positive","velazquez"),
     ev(MB, 40, "own", "tackle",     "negative","bellido"),
     ev(MB, 44, "own", "tackle",     "positive","murillo"),
+    ev(MB, 47, "own", "tackle",     "negative","fernandez"),
     ev(MB, 49, "own", "tackle",     "positive","apraiz_v"),
+    ev(MB, 51, "own", "tackle",     "negative","lanus_c"),
     ev(MB, 53, "own", "tackle",     "positive","bellido"),
     ev(MB, 55, "own", "tackle",     "negative","velazquez"),
+    ev(MB, 57, "own", "tackle",     "missed",  "keller"),
     ev(MB, 58, "own", "tackle",     "positive","portillo"),
     ev(MB, 62, "own", "tackle",     "positive","murillo"),
+    ev(MB, 65, "own", "tackle",     "negative","achigar"),
     ev(MB, 69, "own", "tackle",     "positive","bellido"),
     ev(MB, 71, "own", "tackle",     "positive","velazquez"),
+    ev(MB, 75, "own", "tackle",     "negative","apraiz_v"),
     ev(MB, 78, "own", "tackle",     "positive","striglio"),
     # Patoruzú — scrums
     ev(MB,  4, "own", "scrum",      "won"),
@@ -259,7 +283,9 @@ def calc_player_deltas(all_events, all_mplayers, final_minute=80):
             d["tackles_total"] += 1
             if result == "positive":
                 d["tackles_positive"] += 1
-            else:
+            elif result == "negative":
+                d["tackles_negative"] += 1
+            elif result == "missed":
                 d["tackles_missed"] += 1
         elif type_ == "kick":
             d["kicks"] += 1
