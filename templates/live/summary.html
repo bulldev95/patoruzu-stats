@@ -57,6 +57,7 @@
           {{ stat_row("Mauls ganados", (collective.get("mauls_won", 0) ~ "/" ~ collective.get("mauls", 0)) if collective.get("mauls") else None) }}
           {{ stat_row("Kicks", collective.get("kicks")) }}
           {{ stat_row("Pérdidas", collective.get("turnovers")) }}
+          {{ stat_row("Knock-ons", collective.get("knock_ons")) }}
           {{ stat_row("Amarillas", collective.get("yellow_cards")) }}
           {{ stat_row("Rojas", collective.get("red_cards")) }}
           {{ stat_row("Rojas 20′", collective.get("red_cards_20min")) }}
@@ -85,6 +86,7 @@
                 <th class="text-center">T-</th>
                 <th class="text-center">Kick</th>
                 <th class="text-center">Pérd</th>
+                <th class="text-center">K-O</th>
                 <th class="text-center">🟨</th>
                 <th class="text-center">🟥</th>
               </tr>
@@ -119,6 +121,7 @@
                 <td class="text-center tabular-nums">{{ s.get("tackles_missed") or "–" }}</td>
                 <td class="text-center tabular-nums">{{ s.get("kicks") or "–" }}</td>
                 <td class="text-center tabular-nums">{{ s.get("turnovers") or "–" }}</td>
+                <td class="text-center tabular-nums">{{ s.get("knock_ons") or "–" }}</td>
                 <td class="text-center tabular-nums">{{ s.get("yellow_cards") or "–" }}</td>
                 <td class="text-center tabular-nums">
                   {%- set r = s.get("red_cards", 0) + s.get("red_cards_20min", 0) -%}

@@ -27,7 +27,7 @@ SCORE_DELTA = {
 
 VALID_ACTIONS = {
     "tackle", "try", "conversion", "drop", "scrum", "lineout",
-    "ruck", "maul", "penal", "kick", "perdida", "salida", "tarjeta",
+    "ruck", "maul", "penal", "kick", "perdida", "salida", "tarjeta", "knock_on",
 }
 
 

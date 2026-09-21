@@ -31,6 +31,7 @@ class Player(Base):
     kicks = Column(Integer, default=0)
     turnovers = Column(Integer, default=0)
     lineouts = Column(Integer, default=0)
+    knock_ons = Column(Integer, default=0)
     yellow_cards = Column(Integer, default=0)
     red_cards = Column(Integer, default=0)
     red_cards_20min = Column(Integer, default=0)

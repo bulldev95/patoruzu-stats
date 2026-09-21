@@ -12,6 +12,7 @@ _PLAYER_STAT_BY_TYPE: dict[str, list[str]] = {
     "tackle":     ["tackles_total"],
     "kick":       ["kicks"],
     "perdida":    ["turnovers"],
+    "knock_on":   ["knock_ons"],
 }
 
 _PLAYER_STAT_BY_TYPE_AND_RESULT: dict[tuple[str, str], list[str]] = {
