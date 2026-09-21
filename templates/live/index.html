@@ -110,6 +110,16 @@
         </div>
       </div>
     </div>
+
+    {% if match.status != 'finished' %}
+    <form method="post" action="/live/{{ match.id }}/close"
+          onsubmit="return confirm('¿Finalizar el partido? Esta acción no se puede deshacer.')">
+      <button type="submit" class="btn btn-error btn-outline w-full">Finalizar partido</button>
+    </form>
+    {% else %}
+    <a href="/live/{{ match.id }}/summary" class="btn btn-neutral w-full">Ver resumen</a>
+    {% endif %}
+
   </div>
 
   <!-- Bottom sheet backdrop -->

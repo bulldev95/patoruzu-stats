@@ -1,12 +1,12 @@
 import time
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from database import get_db
 from models import Event, Match, MatchPlayer, Player, Substitution
-from utils.match_utils import calculate_minute, get_active_players, get_recent_events
+from utils.match_utils import accumulate_stat, calculate_minute, get_active_players, get_recent_events
 
 router = APIRouter(prefix="/live")
 templates = Jinja2Templates(directory="templates")
@@ -285,6 +285,38 @@ async def delete_event(request: Request, match_id: str, event_id: str, db: Sessi
         "match": match,
         "events": events,
     })
+
+
+# ── Close match ───────────────────────────────────────────────────────────
+
+@router.post("/{match_id}/close")
+async def close_match(match_id: str, db: Session = Depends(get_db)):
+    match = _get_match(match_id, db)
+
+    if match.start_timestamp is not None:
+        elapsed = int(time.time() * 1000) - int(match.start_timestamp)
+        match.accumulated_time += elapsed
+        match.start_timestamp = None
+
+    match.status = "finished"
+    total_minutes = match.accumulated_time // 60000
+
+    all_mp = (
+        db.query(MatchPlayer, Player)
+        .join(Player, MatchPlayer.player_id == Player.id)
+        .filter(MatchPlayer.match_id == match_id)
+        .all()
+    )
+    for mp, player in all_mp:
+        if mp.minute_in < 0:
+            continue
+        minute_out = mp.minute_out if mp.minute_out is not None else total_minutes
+        minutes = max(0, minute_out - mp.minute_in)
+        player.games_played += 1
+        player.minutes_played += minutes
+
+    db.commit()
+    return RedirectResponse(url=f"/live/{match_id}/summary", status_code=303)
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────
