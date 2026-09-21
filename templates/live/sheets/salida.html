@@ -14,7 +14,7 @@
     <div class="grid grid-cols-2 gap-2">
       {% for value, label in [("own","Us"),("rival","Them")] %}
       <label class="cursor-pointer" @click="sel = '{{ value }}'">
-        <input type="radio" name="notes" value="{{ value }}" class="hidden" required>
+        <input type="radio" name="notes" value="{{ value }}" class="hidden">
         <div class="p-3 rounded-lg border-2 text-center text-sm font-semibold transition-colors select-none"
              :class="sel === '{{ value }}' ? 'border-primary bg-primary text-primary-content' : 'border-base-300 hover:border-base-content/30'">
           {{ label }}
