@@ -7,8 +7,7 @@ Permite registrar incidencias durante el partido, ver el marcador en tiempo real
 
 ## Requisitos
 
-- **Python 3.11 o superior** — [Descargar desde python.org](https://www.python.org/downloads/)
-  - Durante la instalación marcar la opción **"Add Python to PATH"**
+- **Python 3.11 o superior** — [Descargar desde python.org](https://www.python.org/downloads/) e instalarlo con las opciones por defecto
 - **Git** (solo para clonar el repositorio) — [Descargar desde git-scm.com](https://git-scm.com/download/win)
 - Conexión a internet la primera vez (para instalar dependencias)
 
@@ -63,7 +62,7 @@ Esto carga jugadores, partidos y estadísticas de ejemplo.
 ## Solución de problemas
 
 **"Python no está instalado"**  
-Instalar Python desde [python.org](https://www.python.org/downloads/) y asegurarse de marcar "Add Python to PATH".
+Instalar Python desde [python.org](https://www.python.org/downloads/) e instalarlo con las opciones por defecto.
 
 **"El puerto 8000 ya está en uso"**  
 La app ya está corriendo. El navegador se abrirá igual. Si no estaba corriendo, reiniciar la PC y volver a intentar.

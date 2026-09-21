@@ -8,51 +8,72 @@ echo   PATORUZÚ STATS — Iniciando...
 echo  ==========================================
 echo.
 
-:: ── 1. Verificar Python ───────────────────────────────────────────────────
+:: ── 1. Buscar Python (en PATH o en rutas típicas de instalación) ──────────
+set PYTHON=
+
+:: Primero intentar directamente desde PATH
 python --version >nul 2>&1
-if errorlevel 1 (
-    echo  [ERROR] Python no está instalado.
-    echo.
-    echo  Por favor instalarlo desde:
-    echo  https://www.python.org/downloads/
-    echo.
-    echo  IMPORTANTE: durante la instalación marcar la opción
-    echo  "Add Python to PATH"
-    echo.
-    pause
-    exit /b 1
+if not errorlevel 1 (
+    set PYTHON=python
+    goto :python_found
 )
 
+:: Buscar en rutas típicas de Windows (con y sin checkbox de PATH)
+for %%p in (
+    "%LOCALAPPDATA%\Programs\Python\Python313\python.exe"
+    "%LOCALAPPDATA%\Programs\Python\Python312\python.exe"
+    "%LOCALAPPDATA%\Programs\Python\Python311\python.exe"
+    "%PROGRAMFILES%\Python313\python.exe"
+    "%PROGRAMFILES%\Python312\python.exe"
+    "%PROGRAMFILES%\Python311\python.exe"
+    "%PROGRAMFILES(X86)%\Python313\python.exe"
+    "%PROGRAMFILES(X86)%\Python312\python.exe"
+    "%PROGRAMFILES(X86)%\Python311\python.exe"
+) do (
+    if exist %%p (
+        set PYTHON=%%p
+        goto :python_found
+    )
+)
+
+:: Python no encontrado en ningún lado
+echo  [ERROR] Python no está instalado.
+echo.
+echo  Por favor instalarlo desde:
+echo  https://www.python.org/downloads/
+echo.
+echo  Hacer clic en "Download Python" e instalarlo
+echo  con todas las opciones por defecto.
+echo.
+pause
+exit /b 1
+
+:python_found
 :: Verificar versión mínima 3.11
-for /f "tokens=2 delims= " %%v in ('python --version 2^>^&1') do set PYVER=%%v
+for /f "tokens=2 delims= " %%v in ('"%PYTHON%" --version 2^>^&1') do set PYVER=%%v
 for /f "tokens=1,2 delims=." %%a in ("%PYVER%") do (
     set PYMAJOR=%%a
     set PYMINOR=%%b
 )
-if %PYMAJOR% LSS 3 (
-    echo  [ERROR] Se requiere Python 3.11 o superior.
-    echo  Versión instalada: %PYVER%
-    echo  Descargar desde: https://www.python.org/downloads/
-    echo.
-    pause
-    exit /b 1
-)
-if %PYMAJOR% EQU 3 if %PYMINOR% LSS 11 (
-    echo  [ERROR] Se requiere Python 3.11 o superior.
-    echo  Versión instalada: %PYVER%
-    echo  Descargar desde: https://www.python.org/downloads/
-    echo.
-    pause
-    exit /b 1
-)
+if %PYMAJOR% LSS 3 goto :version_error
+if %PYMAJOR% EQU 3 if %PYMINOR% LSS 11 goto :version_error
 echo  [OK] Python %PYVER%
+goto :check_port
+
+:version_error
+echo  [ERROR] Se requiere Python 3.11 o superior.
+echo  Versión instalada: %PYVER%
+echo  Descargar desde: https://www.python.org/downloads/
+echo.
+pause
+exit /b 1
 
 :: ── 2. Verificar puerto 8000 libre ────────────────────────────────────────
+:check_port
 netstat -an 2>nul | find "0.0.0.0:8000" >nul
 if not errorlevel 1 (
     echo.
-    echo  [AVISO] El puerto 8000 ya está en uso.
-    echo  Puede que Patoruzú Stats ya esté corriendo.
+    echo  [AVISO] Patoruzú Stats ya está corriendo.
     echo  Abriendo el navegador...
     echo.
     timeout /t 2 >nul
@@ -63,20 +84,19 @@ if not errorlevel 1 (
 
 :: ── 3. Crear entorno virtual si no existe ─────────────────────────────────
 if not exist "venv\" (
-    echo  Creando entorno virtual por primera vez...
-    python -m venv venv
+    echo  Preparando la app por primera vez, esto tarda un minuto...
+    "%PYTHON%" -m venv venv
     if errorlevel 1 (
-        echo  [ERROR] No se pudo crear el entorno virtual.
+        echo  [ERROR] No se pudo preparar el entorno de la app.
         pause
         exit /b 1
     )
-    echo  [OK] Entorno virtual creado
 )
 
 :: ── 4. Activar entorno virtual ────────────────────────────────────────────
 call venv\Scripts\activate.bat
 if errorlevel 1 (
-    echo  [ERROR] No se pudo activar el entorno virtual.
+    echo  [ERROR] No se pudo activar el entorno de la app.
     pause
     exit /b 1
 )
@@ -85,16 +105,16 @@ if errorlevel 1 (
 echo  Verificando dependencias...
 pip install -r requirements.txt --quiet --disable-pip-version-check
 if errorlevel 1 (
-    echo  [ERROR] No se pudieron instalar las dependencias.
+    echo  [ERROR] No se pudieron instalar los componentes necesarios.
     echo  Verificar conexión a internet e intentar de nuevo.
     pause
     exit /b 1
 )
-echo  [OK] Dependencias listas
+echo  [OK] Todo listo
 
 :: ── 6. Abrir navegador y arrancar servidor ────────────────────────────────
 echo.
-echo  Iniciando servidor...
+echo  Iniciando Patoruzú Stats...
 echo  Para cerrar la app, cerrá esta ventana.
 echo.
 timeout /t 2 >nul
