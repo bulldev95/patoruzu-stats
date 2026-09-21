@@ -1,6 +1,7 @@
 import time
 from models import Event, MatchPlayer, Player
-from utils.match_utils import accumulate_player_stat, accumulate_team_stat, calculate_minute, get_active_players, get_recent_events
+from services.match_utils import get_active_players, get_recent_events
+from utils.match_utils import accumulate_player_stat, accumulate_team_stat, calculate_minute
 from tests.conftest import SAMPLE_PLAYERS, POSITIONS
 import uuid
 
