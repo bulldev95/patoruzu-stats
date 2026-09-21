@@ -28,8 +28,8 @@
     </div>
     {% else %}
 
-    <!-- Resumen global -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+    <!-- Resumen global W/L/D + puntos -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
       <div class="stat bg-base-100 rounded-box shadow p-4">
         <div class="stat-title text-xs">Partidos</div>
         <div class="stat-value text-2xl">{{ totals.matches }}</div>
@@ -66,11 +66,62 @@
       </div>
     </div>
 
+    <!-- Stats colectivas acumuladas -->
+    {% if collective %}
+    <div class="card bg-base-100 shadow mb-6">
+      <div class="card-body p-4">
+        <h2 class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-4">Stats colectivas acumuladas</h2>
+
+        {% macro stat_row(label, value) %}
+        {% if value %}
+        <div class="flex justify-between py-1 border-b border-base-200 last:border-0">
+          <span class="text-sm text-base-content/70">{{ label }}</span>
+          <span class="text-sm font-semibold tabular-nums">{{ value }}</span>
+        </div>
+        {% endif %}
+        {% endmacro %}
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
+          <div>
+            <p class="text-xs font-medium text-base-content/40 uppercase tracking-wide mb-1">Puntos</p>
+            {{ stat_row("Tries", collective.get("tries")) }}
+            {{ stat_row("Conversiones", (collective.get("conversions_scored", 0) ~ "/" ~ collective.get("conversions_attempts", 0)) if collective.get("conversions_attempts") else None) }}
+            {{ stat_row("Drops", (collective.get("drops_scored", 0) ~ "/" ~ collective.get("drops_attempts", 0)) if collective.get("drops_attempts") else None) }}
+            {{ stat_row("Penales", collective.get("penals_scored")) }}
+
+            <p class="text-xs font-medium text-base-content/40 uppercase tracking-wide mt-3 mb-1">Tackles</p>
+            {{ stat_row("Total", collective.get("tackles_total")) }}
+            {{ stat_row("Positivos", collective.get("tackles_positive")) }}
+            {{ stat_row("Fallados", collective.get("tackles_missed")) }}
+          </div>
+          <div>
+            <p class="text-xs font-medium text-base-content/40 uppercase tracking-wide mb-1">Scrum</p>
+            {{ stat_row("Ganados / Total", (collective.get("scrums_won", 0) ~ "/" ~ collective.get("scrums", 0)) if collective.get("scrums") else None) }}
+
+            <p class="text-xs font-medium text-base-content/40 uppercase tracking-wide mt-3 mb-1">Lineout</p>
+            {{ stat_row("Ganados / Total", (collective.get("lineouts_won", 0) ~ "/" ~ collective.get("lineouts", 0)) if collective.get("lineouts") else None) }}
+
+            <p class="text-xs font-medium text-base-content/40 uppercase tracking-wide mt-3 mb-1">Ruck / Maul</p>
+            {{ stat_row("Rucks ganados", (collective.get("rucks_won", 0) ~ "/" ~ collective.get("rucks", 0)) if collective.get("rucks") else None) }}
+            {{ stat_row("Mauls ganados", (collective.get("mauls_won", 0) ~ "/" ~ collective.get("mauls", 0)) if collective.get("mauls") else None) }}
+
+            <p class="text-xs font-medium text-base-content/40 uppercase tracking-wide mt-3 mb-1">Varios</p>
+            {{ stat_row("Kicks", collective.get("kicks")) }}
+            {{ stat_row("Pérdidas", collective.get("turnovers")) }}
+            {{ stat_row("Amarillas", collective.get("yellow_cards")) }}
+            {{ stat_row("Rojas", (collective.get("red_cards", 0) + collective.get("red_cards_20min", 0)) or None) }}
+          </div>
+        </div>
+
+      </div>
+    </div>
+    {% endif %}
+
     <!-- Historial de partidos -->
     <h2 class="text-lg font-semibold mb-3">Historial</h2>
     <div class="flex flex-col gap-2">
       {% for m in matches %}
-      <div class="card bg-base-100 shadow-sm">
+      <a href="/live/{{ m.id }}/summary" class="card bg-base-100 shadow-sm hover:bg-base-300 hover:shadow-md transition-all cursor-pointer">
         <div class="card-body p-4 flex-row items-center justify-between">
           <div>
             <div class="font-semibold">vs {{ m.rival }}</div>
@@ -85,7 +136,7 @@
             </div>
           </div>
         </div>
-      </div>
+      </a>
       {% endfor %}
     </div>
 
