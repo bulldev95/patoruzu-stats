@@ -1,6 +1,8 @@
-<!-- OOB: update scoreboard -->
+{% if request.headers.get('HX-Request') %}
+<!-- OOB: update scoreboard (solo en requests HTMX) -->
 <div id="score-own" hx-swap-oob="true">{{ match.score_own }}</div>
 <div id="score-rival" hx-swap-oob="true">{{ match.score_rival }}</div>
+{% endif %}
 
 <!-- Events list (main target: #events-feed) -->
 {% if events %}
