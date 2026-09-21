@@ -152,6 +152,7 @@
     // ── Barras horizontales: top tackles ──────────────────────────────────
     const tackleLabels  = [{% for p in top_tackles[:8] %}"{{ p.surname }}"{% if not loop.last %},{% endif %}{% endfor %}];
     const tacklePos     = [{% for p in top_tackles[:8] %}{{ p.tackles_positive }}{% if not loop.last %},{% endif %}{% endfor %}];
+    const tackleNeg     = [{% for p in top_tackles[:8] %}{{ p.tackles_negative }}{% if not loop.last %},{% endif %}{% endfor %}];
     const tackleMissed  = [{% for p in top_tackles[:8] %}{{ p.tackles_missed }}{% if not loop.last %},{% endif %}{% endfor %}];
 
     new Chart(document.getElementById("chartTackles"), {
@@ -163,6 +164,12 @@
             label: "Positivos",
             data: tacklePos,
             backgroundColor: "#22c55e",
+            borderRadius: 4,
+          },
+          {
+            label: "Negativos",
+            data: tackleNeg,
+            backgroundColor: "#f59e0b",
             borderRadius: 4,
           },
           {
