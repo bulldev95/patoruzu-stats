@@ -1,3 +1,4 @@
+"""Live match view endpoints: match display, summary, and close."""
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -5,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from models import Event, Match, MatchPlayer, Player, Substitution
-from utils.match_utils import accumulate_stat, get_active_players, get_recent_events
+from utils.match_utils import accumulate_player_stat, accumulate_team_stat, get_active_players, get_recent_events
 
 router = APIRouter(prefix="/live")
 templates = Jinja2Templates(directory="templates")
@@ -66,11 +67,12 @@ async def summary_view(request: Request, match_id: str, db: Session = Depends(ge
     player_event_stats: dict[str, dict] = {}
     collective: dict = {}
     for ev in own_events:
-        accumulate_stat(collective, ev.type, ev.result)
+        accumulate_player_stat(collective, ev.type, ev.result)
+        accumulate_team_stat(collective, ev.type, ev.result)
         if ev.player_id:
             if ev.player_id not in player_event_stats:
                 player_event_stats[ev.player_id] = {}
-            accumulate_stat(player_event_stats[ev.player_id], ev.type, ev.result)
+            accumulate_player_stat(player_event_stats[ev.player_id], ev.type, ev.result)
 
     participants = []
     for mp, player in all_mp:

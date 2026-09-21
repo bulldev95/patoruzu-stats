@@ -1,3 +1,4 @@
+"""Live match action endpoints: clock control, event save/delete, and substitutions."""
 import time
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -6,7 +7,13 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from models import Event, Match, MatchPlayer, Player, Substitution
-from utils.match_utils import accumulate_stat, calculate_minute, get_active_players, get_recent_events
+from utils.match_utils import (
+    _PLAYER_STAT_BY_TYPE,
+    _PLAYER_STAT_BY_TYPE_AND_RESULT,
+    calculate_minute,
+    get_active_players,
+    get_recent_events,
+)
 
 router = APIRouter(prefix="/live")
 templates = Jinja2Templates(directory="templates")
@@ -336,68 +343,16 @@ def _clock_response(request: Request, match: Match) -> HTMLResponse:
 
 
 def _update_player_stats(player: Player, event_type: str, result: str) -> None:
-    if event_type == "try":
-        player.tries += 1
-    elif event_type == "conversion":
-        player.conversions_attempts += 1
-        if result == "scored":
-            player.conversions_scored += 1
-    elif event_type == "drop":
-        player.drops_attempts += 1
-        if result == "scored":
-            player.drops_scored += 1
-    elif event_type == "penal" and result == "kicked":
-        player.penals_scored += 1
-    elif event_type == "tackle":
-        player.tackles_total += 1
-        if result == "positive":
-            player.tackles_positive += 1
-        else:
-            player.tackles_missed += 1
-    elif event_type == "tarjeta":
-        if result == "yellow":
-            player.yellow_cards += 1
-        elif result == "red":
-            player.red_cards += 1
-        elif result == "red_20":
-            player.red_cards_20min += 1
-    elif event_type == "kick":
-        player.kicks += 1
-    elif event_type == "perdida":
-        player.turnovers += 1
-    elif event_type == "lineout" and result in ("won", "stolen"):
-        player.lineouts += 1
+    """Increment the player's historical stat counters for the given event."""
+    for key in _PLAYER_STAT_BY_TYPE.get(event_type, []):
+        setattr(player, key, getattr(player, key) + 1)
+    for key in _PLAYER_STAT_BY_TYPE_AND_RESULT.get((event_type, result), []):
+        setattr(player, key, getattr(player, key) + 1)
 
 
 def _revert_player_stats(player: Player, event_type: str, result: str) -> None:
-    if event_type == "try":
-        player.tries = max(0, player.tries - 1)
-    elif event_type == "conversion":
-        player.conversions_attempts = max(0, player.conversions_attempts - 1)
-        if result == "scored":
-            player.conversions_scored = max(0, player.conversions_scored - 1)
-    elif event_type == "drop":
-        player.drops_attempts = max(0, player.drops_attempts - 1)
-        if result == "scored":
-            player.drops_scored = max(0, player.drops_scored - 1)
-    elif event_type == "penal" and result == "kicked":
-        player.penals_scored = max(0, player.penals_scored - 1)
-    elif event_type == "tackle":
-        player.tackles_total = max(0, player.tackles_total - 1)
-        if result == "positive":
-            player.tackles_positive = max(0, player.tackles_positive - 1)
-        else:
-            player.tackles_missed = max(0, player.tackles_missed - 1)
-    elif event_type == "tarjeta":
-        if result == "yellow":
-            player.yellow_cards = max(0, player.yellow_cards - 1)
-        elif result == "red":
-            player.red_cards = max(0, player.red_cards - 1)
-        elif result == "red_20":
-            player.red_cards_20min = max(0, player.red_cards_20min - 1)
-    elif event_type == "kick":
-        player.kicks = max(0, player.kicks - 1)
-    elif event_type == "perdida":
-        player.turnovers = max(0, player.turnovers - 1)
-    elif event_type == "lineout" and result in ("won", "stolen"):
-        player.lineouts = max(0, player.lineouts - 1)
+    """Decrement the player's historical stat counters when an event is deleted (floor at 0)."""
+    for key in _PLAYER_STAT_BY_TYPE.get(event_type, []):
+        setattr(player, key, max(0, getattr(player, key) - 1))
+    for key in _PLAYER_STAT_BY_TYPE_AND_RESULT.get((event_type, result), []):
+        setattr(player, key, max(0, getattr(player, key) - 1))

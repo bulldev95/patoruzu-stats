@@ -1,6 +1,6 @@
 import time
 from models import Event, MatchPlayer, Player
-from utils.match_utils import accumulate_stat, calculate_minute, get_active_players, get_recent_events
+from utils.match_utils import accumulate_player_stat, accumulate_team_stat, calculate_minute, get_active_players, get_recent_events
 from tests.conftest import SAMPLE_PLAYERS, POSITIONS
 import uuid
 
@@ -118,10 +118,10 @@ class TestGetRecentEvents:
         assert events[1].id == e1.id
 
 
-class TestAccumulateStat:
+class TestAccumulatePlayerStat:
     def _s(self, event_type, result):
         stats = {}
-        accumulate_stat(stats, event_type, result)
+        accumulate_player_stat(stats, event_type, result)
         return stats
 
     def test_try(self):
@@ -166,6 +166,31 @@ class TestAccumulateStat:
     def test_perdida(self):
         assert self._s("perdida", "any") == {"turnovers": 1}
 
+    def test_team_events_ignored(self):
+        assert self._s("scrum", "won") == {}
+        assert self._s("lineout", "won") == {}
+        assert self._s("ruck", "won") == {}
+        assert self._s("maul", "won") == {}
+
+    def test_accumulates_multiple_calls(self):
+        stats = {}
+        accumulate_player_stat(stats, "try", "scored")
+        accumulate_player_stat(stats, "try", "scored")
+        assert stats == {"tries": 2}
+
+    def test_unknown_event_type_ignored(self):
+        stats = {}
+        accumulate_player_stat(stats, "salida", "any")
+        accumulate_player_stat(stats, "unknown", "any")
+        assert stats == {}
+
+
+class TestAccumulateTeamStat:
+    def _s(self, event_type, result):
+        stats = {}
+        accumulate_team_stat(stats, event_type, result)
+        return stats
+
     def test_scrum_won(self):
         assert self._s("scrum", "won") == {"scrums": 1, "scrums_won": 1}
 
@@ -193,18 +218,19 @@ class TestAccumulateStat:
     def test_maul_lost(self):
         assert self._s("maul", "lost") == {"mauls": 1}
 
+    def test_player_events_ignored(self):
+        assert self._s("try", "scored") == {}
+        assert self._s("tackle", "positive") == {}
+        assert self._s("tarjeta", "yellow") == {}
+
     def test_accumulates_multiple_calls(self):
         stats = {}
-        accumulate_stat(stats, "try", "scored")
-        accumulate_stat(stats, "try", "scored")
-        assert stats == {"tries": 2}
-
-    def test_unknown_event_type_no_crash(self):
-        stats = {}
-        accumulate_stat(stats, "salida", "any")
-        assert stats == {}
+        accumulate_team_stat(stats, "scrum", "won")
+        accumulate_team_stat(stats, "scrum", "lost")
+        assert stats == {"scrums": 2, "scrums_won": 1}
 
     def test_unknown_event_type_ignored(self):
         stats = {}
-        accumulate_stat(stats, "unknown", "any")
+        accumulate_team_stat(stats, "salida", "any")
+        accumulate_team_stat(stats, "unknown", "any")
         assert stats == {}
