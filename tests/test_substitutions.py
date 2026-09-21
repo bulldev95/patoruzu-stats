@@ -112,7 +112,7 @@ class TestSaveSubstitution:
 
 class TestActivePlayersAfterSubstitution:
     def test_incoming_player_appears_in_active(self, client, sample_match, db):
-        from utils.match_utils import get_active_players
+        from services.match_utils import get_active_players
         out_id = _player_id(sample_match, db, 1)
         in_id = _player_id(sample_match, db, 16)
         client.post(f"/live/{sample_match.id}/substitutions",
@@ -121,7 +121,7 @@ class TestActivePlayersAfterSubstitution:
         assert in_id in active_ids
 
     def test_outgoing_player_not_in_active(self, client, sample_match, db):
-        from utils.match_utils import get_active_players
+        from services.match_utils import get_active_players
         out_id = _player_id(sample_match, db, 1)
         in_id = _player_id(sample_match, db, 16)
         client.post(f"/live/{sample_match.id}/substitutions",
@@ -130,7 +130,7 @@ class TestActivePlayersAfterSubstitution:
         assert out_id not in active_ids
 
     def test_active_count_unchanged_after_substitution(self, client, sample_match, db):
-        from utils.match_utils import get_active_players
+        from services.match_utils import get_active_players
         before = len(get_active_players(sample_match.id, db))
         out_id = _player_id(sample_match, db, 1)
         in_id = _player_id(sample_match, db, 16)
