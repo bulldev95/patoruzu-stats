@@ -1,0 +1,17 @@
+{% from "live/sheets/_base.html" import close_btn, player_select, submit_btn %}
+<div>
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-xl font-bold">Knock-on</h2>
+    {{ close_btn() }}
+  </div>
+  <form hx-post="/live/{{ match_id }}/events"
+        hx-target="#events-feed"
+        hx-swap="innerHTML"
+        hx-on::after-request="window.dispatchEvent(new CustomEvent('sheet-done'))">
+    <input type="hidden" name="type" value="knock_on">
+    <input type="hidden" name="team" value="own">
+    <input type="hidden" name="result" value="knock_on">
+    {{ player_select(players) }}
+    {{ submit_btn() }}
+  </form>
+</div>

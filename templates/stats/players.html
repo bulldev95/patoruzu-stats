@@ -71,7 +71,8 @@
             <th class="text-center">Tries</th>
             <th class="text-center">Tackles</th>
             <th class="text-center">T+</th>
-            <th class="text-center">Ruck</th>
+            <th class="text-center">Pérd</th>
+            <th class="text-center">K-O</th>
             <th class="text-center">Penal</th>
             <th class="text-center">Conv</th>
             <th class="text-center">Drop</th>
@@ -92,6 +93,7 @@
             <td class="text-center">{{ p.tackles_total }}</td>
             <td class="text-center text-success">{{ p.tackles_positive }}</td>
             <td class="text-center">{{ p.turnovers }}</td>
+            <td class="text-center {% if p.knock_ons > 0 %}text-error{% endif %}">{{ p.knock_ons if p.knock_ons > 0 else "–" }}</td>
             <td class="text-center">{{ p.penals_scored }}</td>
             <td class="text-center">{{ p.conversions_scored }}/{{ p.conversions_attempts }}</td>
             <td class="text-center">{{ p.drops_scored }}/{{ p.drops_attempts }}</td>

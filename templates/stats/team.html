@@ -136,6 +136,7 @@
             <p class="text-xs font-medium text-base-content/40 uppercase tracking-wide mt-3 mb-1">Varios</p>
             {{ stat_row("Kicks", collective.get("kicks")) }}
             {{ stat_row("Pérdidas", collective.get("turnovers")) }}
+            {{ stat_row("Knock-ons", collective.get("knock_ons")) }}
             {{ stat_row("Amarillas", collective.get("yellow_cards")) }}
             {{ stat_row("Rojas", (collective.get("red_cards", 0) + collective.get("red_cards_20min", 0)) or None) }}
           </div>
