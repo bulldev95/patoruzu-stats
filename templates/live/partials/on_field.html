@@ -1,4 +1,5 @@
-<!-- OOB: update bench -->
+{% if request.headers.get('HX-Request') %}
+<!-- OOB: update bench (solo en requests HTMX) -->
 <div id="bench-content" hx-swap-oob="true">
   <h2 class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-2">
     Bench ({{ bench | length }})
@@ -12,6 +13,7 @@
     {% endfor %}
   </div>
 </div>
+{% endif %}
 
 <!-- On the field (main target: #on-field) -->
 <h2 class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-2">
