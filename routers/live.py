@@ -1,11 +1,12 @@
+"""Live match view endpoints: match display, summary, and close."""
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models import Match, MatchPlayer, Player
-from utils.match_utils import get_active_players, get_recent_events
+from models import Event, Match, MatchPlayer, Player, Substitution
+from utils.match_utils import accumulate_player_stat, accumulate_team_stat, get_active_players, get_recent_events
 
 router = APIRouter(prefix="/live")
 templates = Jinja2Templates(directory="templates")
@@ -42,4 +43,62 @@ async def live_view(request: Request, match_id: str, db: Session = Depends(get_d
         "starters": starters,
         "bench": bench,
         "events": events,
+    })
+
+
+@router.get("/{match_id}/summary", response_class=HTMLResponse)
+async def summary_view(request: Request, match_id: str, db: Session = Depends(get_db)):
+    match = db.query(Match).filter_by(id=match_id).first()
+    if not match:
+        raise HTTPException(status_code=404, detail="Match not found")
+
+    total_minutes = match.accumulated_time // 60000
+
+    all_mp = (
+        db.query(MatchPlayer, Player)
+        .join(Player, MatchPlayer.player_id == Player.id)
+        .filter(MatchPlayer.match_id == match_id)
+        .order_by(MatchPlayer.number)
+        .all()
+    )
+
+    own_events = db.query(Event).filter_by(match_id=match_id, team="own").all()
+
+    player_event_stats: dict[str, dict] = {}
+    collective: dict = {}
+    for ev in own_events:
+        accumulate_player_stat(collective, ev.type, ev.result)
+        accumulate_team_stat(collective, ev.type, ev.result)
+        if ev.player_id:
+            if ev.player_id not in player_event_stats:
+                player_event_stats[ev.player_id] = {}
+            accumulate_player_stat(player_event_stats[ev.player_id], ev.type, ev.result)
+
+    participants = []
+    for mp, player in all_mp:
+        if mp.minute_in < 0:
+            continue
+        minute_out = mp.minute_out if mp.minute_out is not None else total_minutes
+        minutes = max(0, minute_out - mp.minute_in)
+        participants.append({
+            "mp": mp,
+            "player": player,
+            "minutes": minutes,
+            "stats": player_event_stats.get(player.id, {}),
+        })
+
+    subs = db.query(Substitution).filter_by(match_id=match_id).order_by(Substitution.minute).all()
+    sub_details = []
+    for sub in subs:
+        player_out = db.query(Player).filter_by(id=sub.player_out_id).first()
+        player_in = db.query(Player).filter_by(id=sub.player_in_id).first()
+        sub_details.append({"sub": sub, "player_out": player_out, "player_in": player_in})
+
+    return templates.TemplateResponse("live/summary.html", {
+        "request": request,
+        "match": match,
+        "participants": participants,
+        "collective": collective,
+        "substitutions": sub_details,
+        "total_minutes": total_minutes,
     })
