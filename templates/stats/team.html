@@ -70,14 +70,13 @@
     <!-- Gráficos -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
 
-      <!-- Donut W/L/D -->
+      <!-- Barras W/D/L -->
       <div class="card bg-base-100 shadow">
         <div class="card-body p-4">
-          <h2 class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-3">Resultados</h2>
-          <div class="flex justify-center">
-            <div style="width:180px;height:180px">
-              <canvas id="chartResults"></canvas>
-            </div>
+          <h2 class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-1">Resultados</h2>
+          <p class="text-xs text-base-content/40 mb-3">{{ totals.matches }} partido{{ 's' if totals.matches != 1 }} jugado{{ 's' if totals.matches != 1 }}</p>
+          <div style="height:150px">
+            <canvas id="chartResults"></canvas>
           </div>
         </div>
       </div>
@@ -177,23 +176,32 @@
     Chart.defaults.color = "#9ca3af";
     Chart.defaults.font.family = "inherit";
 
-    // ── Donut: W/L/D ──────────────────────────────────────────────────────
+    // ── Barras: W/D/L ─────────────────────────────────────────────────────
     new Chart(document.getElementById("chartResults"), {
-      type: "doughnut",
+      type: "bar",
       data: {
-        labels: ["Victorias", "Derrotas", "Empates"],
+        labels: ["Victorias", "Empates", "Derrotas"],
         datasets: [{
-          data: [{{ totals.wins }}, {{ totals.losses }}, {{ totals.draws }}],
-          backgroundColor: ["#22c55e", "#ef4444", "#6b7280"],
-          borderWidth: 0,
+          data: [{{ totals.wins }}, {{ totals.draws }}, {{ totals.losses }}],
+          backgroundColor: ["#22c55e", "#6b7280", "#ef4444"],
+          borderRadius: 6,
+          barThickness: 40,
         }]
       },
       options: {
         responsive: true,
-        maintainAspectRatio: true,
-        cutout: "65%",
+        maintainAspectRatio: false,
         plugins: {
-          legend: { position: "bottom", labels: { boxWidth: 10, padding: 10, font: { size: 11 } } }
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => ` ${ctx.raw} partido${ctx.raw !== 1 ? "s" : ""}`
+            }
+          }
+        },
+        scales: {
+          x: { grid: { display: false } },
+          y: { beginAtZero: true, ticks: { stepSize: 1 } }
         }
       }
     });
