@@ -50,6 +50,7 @@
           {{ stat_row("Penales", collective.get("penals_scored")) }}
           {{ stat_row("Tackles", collective.get("tackles_total")) }}
           {{ stat_row("T. positivos", collective.get("tackles_positive")) }}
+          {{ stat_row("T. negativos", collective.get("tackles_negative")) }}
           {{ stat_row("T. fallados", collective.get("tackles_missed")) }}
           {{ stat_row("Scrums ganados", (collective.get("scrums_won", 0) ~ "/" ~ collective.get("scrums", 0)) if collective.get("scrums") else None) }}
           {{ stat_row("Lineouts ganados", (collective.get("lineouts_won", 0) ~ "/" ~ collective.get("lineouts", 0)) if collective.get("lineouts") else None) }}
@@ -83,6 +84,7 @@
                 <th class="text-center">Pen</th>
                 <th class="text-center">Tck</th>
                 <th class="text-center">T+</th>
+                <th class="text-center">T~</th>
                 <th class="text-center">T-</th>
                 <th class="text-center">Kick</th>
                 <th class="text-center">Pérd</th>
@@ -118,6 +120,7 @@
                 <td class="text-center tabular-nums">{{ s.get("penals_scored") or "–" }}</td>
                 <td class="text-center tabular-nums">{{ s.get("tackles_total") or "–" }}</td>
                 <td class="text-center tabular-nums">{{ s.get("tackles_positive") or "–" }}</td>
+                <td class="text-center tabular-nums">{{ s.get("tackles_negative") or "–" }}</td>
                 <td class="text-center tabular-nums">{{ s.get("tackles_missed") or "–" }}</td>
                 <td class="text-center tabular-nums">{{ s.get("kicks") or "–" }}</td>
                 <td class="text-center tabular-nums">{{ s.get("turnovers") or "–" }}</td>

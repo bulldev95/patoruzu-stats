@@ -14,7 +14,7 @@
     <template x-if="team === 'own'">
       <div>{{ player_select(players) }}</div>
     </template>
-    {{ result_radio([("positive","Positive"),("missed","Missed")]) }}
+    {{ result_radio([("positive","Positive"),("negative","Negative"),("missed","Missed")]) }}
     {{ submit_btn() }}
   </form>
 </div>

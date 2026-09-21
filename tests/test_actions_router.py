@@ -381,6 +381,16 @@ class TestPlayerStats:
         assert player.tackles_positive == 1
         assert player.tackles_missed == 0
 
+    def test_tackle_negative_updates_tackles(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("tackle", "negative", player_id=pid))
+        player = self._get_player(sample_match, db)
+        db.refresh(player)
+        assert player.tackles_total == 1
+        assert player.tackles_negative == 1
+        assert player.tackles_positive == 0
+        assert player.tackles_missed == 0
+
     def test_tackle_missed_updates_tackles(self, client, sample_match, db):
         pid = self._player_id(sample_match, db)
         client.post(f"/live/{sample_match.id}/events", data=event_form("tackle", "missed", player_id=pid))
@@ -389,6 +399,7 @@ class TestPlayerStats:
         assert player.tackles_total == 1
         assert player.tackles_missed == 1
         assert player.tackles_positive == 0
+        assert player.tackles_negative == 0
 
     def test_yellow_card_updates_yellow_cards(self, client, sample_match, db):
         pid = self._player_id(sample_match, db)

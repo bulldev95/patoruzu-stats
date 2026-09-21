@@ -27,6 +27,7 @@ PLAYER_STAT_BY_TYPE_AND_RESULT: dict[tuple[str, str], list[str]] = {
     ("drop",       "scored"):   ["drops_scored"],
     ("penal",      "kicked"):   ["penals_scored"],
     ("tackle",     "positive"): ["tackles_positive"],
+    ("tackle",     "negative"): ["tackles_negative"],
     ("tackle",     "missed"):   ["tackles_missed"],
     ("tarjeta",    "yellow"):   ["yellow_cards"],
     ("tarjeta",    "red"):      ["red_cards"],
