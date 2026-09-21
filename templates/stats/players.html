@@ -46,11 +46,11 @@
       {% endif %}
 
       <!-- Barras horizontales: top tackleadores -->
-      {% set top_tackles = players | sort(attribute='tackles_positive', reverse=True) | selectattr('tackles_positive', 'gt', 0) | list %}
+      {% set top_tackles = players | sort(attribute='tackles_total', reverse=True) | selectattr('tackles_total', 'gt', 0) | list %}
       {% if top_tackles %}
       <div class="card bg-base-100 shadow">
         <div class="card-body p-4">
-          <h2 class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-3">Top tackles positivos</h2>
+          <h2 class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-3">Top tackles</h2>
           <div style="height: {{ [top_tackles[:8]|length * 36, 120]|max }}px">
             <canvas id="chartTackles"></canvas>
           </div>
@@ -147,7 +147,7 @@
     });
     {% endif %}
 
-    {% set top_tackles = players | sort(attribute='tackles_positive', reverse=True) | selectattr('tackles_positive', 'gt', 0) | list %}
+    {% set top_tackles = players | sort(attribute='tackles_total', reverse=True) | selectattr('tackles_total', 'gt', 0) | list %}
     {% if top_tackles %}
     // ── Barras horizontales: top tackles ──────────────────────────────────
     const tackleLabels  = [{% for p in top_tackles[:8] %}"{{ p.surname }}"{% if not loop.last %},{% endif %}{% endfor %}];
