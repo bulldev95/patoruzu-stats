@@ -11,14 +11,12 @@ echo.
 :: ── 1. Buscar Python (en PATH o en rutas típicas de instalación) ──────────
 set PYTHON=
 
-:: Primero intentar directamente desde PATH
 python --version >nul 2>&1
 if not errorlevel 1 (
     set PYTHON=python
     goto :python_found
 )
 
-:: Buscar en rutas típicas de Windows (con y sin checkbox de PATH)
 for %%p in (
     "%LOCALAPPDATA%\Programs\Python\Python313\python.exe"
     "%LOCALAPPDATA%\Programs\Python\Python312\python.exe"
@@ -36,20 +34,54 @@ for %%p in (
     )
 )
 
-:: Python no encontrado en ningún lado
-echo  [ERROR] Python no está instalado.
+:: ── Python no encontrado — descargar e instalar automáticamente ───────────
+echo  Python no está instalado. Instalando automáticamente...
+echo  Esto puede tardar unos minutos. Por favor esperá.
 echo.
-echo  Por favor instalarlo desde:
-echo  https://www.python.org/downloads/
-echo.
-echo  Hacer clic en "Download Python" e instalarlo
-echo  con todas las opciones por defecto.
-echo.
-pause
-exit /b 1
+
+:: Verificar que haya conexión a internet
+ping -n 1 python.org >nul 2>&1
+if errorlevel 1 (
+    echo  [ERROR] Sin conexión a internet.
+    echo  Conectate a internet y volvé a abrir la app.
+    echo.
+    pause
+    exit /b 1
+)
+
+:: Descargar installer de Python 3.13 con PowerShell
+set PYINSTALLER=%TEMP%\python_installer.exe
+echo  Descargando Python...
+powershell -Command "Invoke-WebRequest -Uri 'https://www.python.org/ftp/python/3.13.0/python-3.13.0-amd64.exe' -OutFile '%PYINSTALLER%'" >nul 2>&1
+if not exist "%PYINSTALLER%" (
+    echo  [ERROR] No se pudo descargar Python.
+    echo  Intentar de nuevo o descargarlo manualmente desde:
+    echo  https://www.python.org/downloads/
+    echo.
+    pause
+    exit /b 1
+)
+
+:: Instalar silenciosamente (pide UAC una sola vez)
+echo  Instalando Python — Windows puede pedir permiso, hacer clic en Si.
+"%PYINSTALLER%" /quiet InstallAllUsers=0 PrependPath=1 Include_test=0
+if errorlevel 1 (
+    echo  [ERROR] No se pudo instalar Python.
+    echo  Intentar de nuevo o descargarlo manualmente desde:
+    echo  https://www.python.org/downloads/
+    echo.
+    pause
+    exit /b 1
+)
+del "%PYINSTALLER%" >nul 2>&1
+echo  [OK] Python instalado correctamente
+
+:: Refrescar PATH para que python quede disponible en esta sesión
+set PYTHON=%LOCALAPPDATA%\Programs\Python\Python313\python.exe
+if not exist "%PYTHON%" set PYTHON=%PROGRAMFILES%\Python313\python.exe
 
 :python_found
-:: Verificar versión mínima 3.11
+:: ── 2. Verificar versión mínima 3.11 ──────────────────────────────────────
 for /f "tokens=2 delims= " %%v in ('"%PYTHON%" --version 2^>^&1') do set PYVER=%%v
 for /f "tokens=1,2 delims=." %%a in ("%PYVER%") do (
     set PYMAJOR=%%a
@@ -61,14 +93,13 @@ echo  [OK] Python %PYVER%
 goto :check_port
 
 :version_error
-echo  [ERROR] Se requiere Python 3.11 o superior.
-echo  Versión instalada: %PYVER%
+echo  [ERROR] Se requiere Python 3.11 o superior. Versión instalada: %PYVER%
 echo  Descargar desde: https://www.python.org/downloads/
 echo.
 pause
 exit /b 1
 
-:: ── 2. Verificar puerto 8000 libre ────────────────────────────────────────
+:: ── 3. Verificar puerto 8000 libre ────────────────────────────────────────
 :check_port
 netstat -an 2>nul | find "0.0.0.0:8000" >nul
 if not errorlevel 1 (
@@ -82,7 +113,7 @@ if not errorlevel 1 (
     exit /b 0
 )
 
-:: ── 3. Crear entorno virtual si no existe ─────────────────────────────────
+:: ── 4. Crear entorno virtual si no existe ─────────────────────────────────
 if not exist "venv\" (
     echo  Preparando la app por primera vez, esto tarda un minuto...
     "%PYTHON%" -m venv venv
@@ -93,7 +124,7 @@ if not exist "venv\" (
     )
 )
 
-:: ── 4. Activar entorno virtual ────────────────────────────────────────────
+:: ── 5. Activar entorno virtual ────────────────────────────────────────────
 call venv\Scripts\activate.bat
 if errorlevel 1 (
     echo  [ERROR] No se pudo activar el entorno de la app.
@@ -101,7 +132,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
-:: ── 5. Instalar/actualizar dependencias ───────────────────────────────────
+:: ── 6. Instalar/actualizar dependencias ───────────────────────────────────
 echo  Verificando dependencias...
 pip install -r requirements.txt --quiet --disable-pip-version-check
 if errorlevel 1 (
@@ -112,7 +143,7 @@ if errorlevel 1 (
 )
 echo  [OK] Todo listo
 
-:: ── 6. Abrir navegador y arrancar servidor ────────────────────────────────
+:: ── 7. Abrir navegador y arrancar servidor ────────────────────────────────
 echo.
 echo  Iniciando Patoruzú Stats...
 echo  Para cerrar la app, cerrá esta ventana.
