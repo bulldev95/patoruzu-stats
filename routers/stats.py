@@ -5,7 +5,8 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models import Match, Player
+from models import Event, Match, Player
+from utils.match_utils import accumulate_player_stat, accumulate_team_stat
 
 router = APIRouter(prefix="/stats")
 templates = Jinja2Templates(directory="templates")
@@ -29,10 +30,23 @@ async def team_stats(request: Request, db: Session = Depends(get_db)):
         "points_against": sum(m.score_rival for m in matches),
     }
 
+    match_ids = [m.id for m in matches]
+    collective: dict = {}
+    if match_ids:
+        own_events = (
+            db.query(Event)
+            .filter(Event.match_id.in_(match_ids), Event.team == "own")
+            .all()
+        )
+        for ev in own_events:
+            accumulate_player_stat(collective, ev.type, ev.result)
+            accumulate_team_stat(collective, ev.type, ev.result)
+
     return templates.TemplateResponse("stats/team.html", {
         "request": request,
         "matches": matches,
         "totals": totals,
+        "collective": collective,
     })
 
 
