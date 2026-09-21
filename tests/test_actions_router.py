@@ -244,7 +244,11 @@ class TestSaveEvent:
         assert sample_match.score_own == 0
 
     def test_score_oob_in_response(self, client, sample_match):
-        response = client.post(f"/live/{sample_match.id}/events", data=event_form("try", "scored"))
+        response = client.post(
+            f"/live/{sample_match.id}/events",
+            data=event_form("try", "scored"),
+            headers={"HX-Request": "true"},
+        )
         assert 'id="score-own"' in response.text
         assert "5" in response.text
 
@@ -769,5 +773,8 @@ class TestDeleteEvent:
     def test_delete_oob_score_in_response(self, client, sample_match, db):
         client.post(f"/live/{sample_match.id}/events", data=event_form("try", "scored"))
         event = db.query(Event).filter_by(match_id=sample_match.id).first()
-        response = client.delete(f"/live/{sample_match.id}/events/{event.id}")
+        response = client.delete(
+            f"/live/{sample_match.id}/events/{event.id}",
+            headers={"HX-Request": "true"},
+        )
         assert 'id="score-own"' in response.text

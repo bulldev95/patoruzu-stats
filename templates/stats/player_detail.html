@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ player.surname }}, {{ player.name }} — Patoruzú</title>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-base-200 min-h-screen">
+
+  <div class="max-w-2xl mx-auto p-4">
+
+    <div class="flex items-center gap-3 mb-6">
+      <a href="/stats/players" class="btn btn-ghost btn-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </a>
+      <div>
+        <h1 class="text-2xl font-bold">{{ player.surname }}, {{ player.name }}</h1>
+        <p class="text-sm text-base-content/50">{{ player.games_played }} partido{{ 's' if player.games_played != 1 }} · {{ player.minutes_played }} min</p>
+      </div>
+    </div>
+
+    <!-- Totales históricos -->
+    <div class="card bg-base-100 shadow mb-6">
+      <div class="card-body p-4">
+        <h2 class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-3">Totales históricos</h2>
+        <div class="grid grid-cols-4 gap-2 text-center">
+          <div>
+            <div class="text-2xl font-bold text-success">{{ player.tries }}</div>
+            <div class="text-xs text-base-content/50">Tries</div>
+          </div>
+          <div>
+            <div class="text-2xl font-bold">{{ player.tackles_positive }}</div>
+            <div class="text-xs text-base-content/50">Tackles+</div>
+          </div>
+          <div>
+            <div class="text-2xl font-bold text-error">{{ player.tackles_missed }}</div>
+            <div class="text-xs text-base-content/50">Tackles−</div>
+          </div>
+          <div>
+            <div class="text-2xl font-bold">{{ player.penals_scored }}</div>
+            <div class="text-xs text-base-content/50">Penales</div>
+          </div>
+          <div>
+            <div class="text-2xl font-bold">{{ player.conversions_scored }}/{{ player.conversions_attempts }}</div>
+            <div class="text-xs text-base-content/50">Convers.</div>
+          </div>
+          <div>
+            <div class="text-2xl font-bold">{{ player.drops_scored }}/{{ player.drops_attempts }}</div>
+            <div class="text-xs text-base-content/50">Drops</div>
+          </div>
+          <div>
+            <div class="text-2xl font-bold {% if player.knock_ons > 0 %}text-error{% endif %}">{{ player.knock_ons }}</div>
+            <div class="text-xs text-base-content/50">K-O</div>
+          </div>
+          <div>
+            <div class="text-2xl font-bold">{{ player.turnovers }}</div>
+            <div class="text-xs text-base-content/50">Pérdidas</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desglose por partido -->
+    {% if not match_stats %}
+    <div class="card bg-base-100 shadow">
+      <div class="card-body items-center text-center py-8">
+        <p class="text-base-content/50">Sin partidos finalizados registrados.</p>
+      </div>
+    </div>
+    {% else %}
+    <h2 class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-2">Por partido</h2>
+    <div class="overflow-x-auto rounded-box shadow">
+      <table class="table table-sm bg-base-100">
+        <thead>
+          <tr class="text-xs text-base-content/60 uppercase">
+            <th>Partido</th>
+            <th class="text-center">Min</th>
+            <th class="text-center">Try</th>
+            <th class="text-center">T+</th>
+            <th class="text-center">T−</th>
+            <th class="text-center">Pen</th>
+            <th class="text-center">Conv</th>
+            <th class="text-center">Drop</th>
+            <th class="text-center">K-O</th>
+            <th class="text-center">Pérd</th>
+            <th class="text-center">🟨</th>
+            <th class="text-center">🟥</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ms in match_stats %}
+          {% set s = ms.stats %}
+          {% set m = ms.match %}
+          <tr class="hover cursor-pointer" onclick="location.href='/live/{{ m.id }}/summary'">
+            <td>
+              <div class="font-semibold text-sm">{{ m.rival }}</div>
+              <div class="text-xs text-base-content/50">
+                {{ m.date }}
+                <span class="{% if m.score_own > m.score_rival %}text-success{% elif m.score_own < m.score_rival %}text-error{% endif %} font-semibold">
+                  {{ m.score_own }}–{{ m.score_rival }}
+                </span>
+              </div>
+            </td>
+            <td class="text-center">{{ ms.minutes }}</td>
+            <td class="text-center {% if s.get('tries', 0) > 0 %}font-bold text-success{% endif %}">
+              {{ s.get('tries', 0) or '–' }}
+            </td>
+            <td class="text-center text-success">{{ s.get('tackles_positive', 0) or '–' }}</td>
+            <td class="text-center {% if s.get('tackles_missed', 0) > 0 %}text-error{% endif %}">
+              {{ s.get('tackles_missed', 0) or '–' }}
+            </td>
+            <td class="text-center">{{ s.get('penals_scored', 0) or '–' }}</td>
+            <td class="text-center">
+              {% set cs = s.get('conversions_scored', 0) %}
+              {% set ca = s.get('conversions_attempts', 0) %}
+              {{ cs ~ '/' ~ ca if ca > 0 else '–' }}
+            </td>
+            <td class="text-center">
+              {% set ds = s.get('drops_scored', 0) %}
+              {% set da = s.get('drops_attempts', 0) %}
+              {{ ds ~ '/' ~ da if da > 0 else '–' }}
+            </td>
+            <td class="text-center {% if s.get('knock_ons', 0) > 0 %}text-error{% endif %}">
+              {{ s.get('knock_ons', 0) or '–' }}
+            </td>
+            <td class="text-center">{{ s.get('turnovers', 0) or '–' }}</td>
+            <td class="text-center">{{ s.get('yellow_cards', 0) or '–' }}</td>
+            <td class="text-center {% if (s.get('red_cards', 0) + s.get('red_cards_20min', 0)) > 0 %}text-error font-bold{% endif %}">
+              {{ (s.get('red_cards', 0) + s.get('red_cards_20min', 0)) or '–' }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+  </div>
+
+</body>
+</html>
