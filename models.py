@@ -27,6 +27,7 @@ class Player(Base):
     penals_scored = Column(Integer, default=0)
     tackles_total = Column(Integer, default=0)
     tackles_positive = Column(Integer, default=0)
+    tackles_negative = Column(Integer, default=0)
     tackles_missed = Column(Integer, default=0)
     kicks = Column(Integer, default=0)
     turnovers = Column(Integer, default=0)

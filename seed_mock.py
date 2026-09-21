@@ -103,14 +103,29 @@ events_a = [
     ev(MA, 69, "own", "conversion", "scored",  "cardoso"),
     # Patoruzú — tackles
     ev(MA,  7, "own", "tackle",     "positive","barrera"),
+    ev(MA,  9, "own", "tackle",     "negative","ortiz"),
     ev(MA, 10, "own", "tackle",     "positive","bellido"),
+    ev(MA, 13, "own", "tackle",     "negative","achigar"),
+    ev(MA, 15, "own", "tackle",     "negative","murillo"),
+    ev(MA, 17, "own", "tackle",     "negative","ramos"),
     ev(MA, 18, "own", "tackle",     "positive","achigar"),
     ev(MA, 22, "own", "tackle",     "missed",  "roldan"),
     ev(MA, 23, "own", "tackle",     "positive","bellido"),
+    ev(MA, 26, "own", "tackle",     "negative","portillo"),
+    ev(MA, 28, "own", "tackle",     "negative","bellido"),
+    ev(MA, 31, "own", "tackle",     "negative","apraiz_v"),
     ev(MA, 33, "own", "tackle",     "positive","achigar"),
+    ev(MA, 37, "own", "tackle",     "negative","velazquez"),
     ev(MA, 40, "own", "tackle",     "positive","murillo"),
+    ev(MA, 43, "own", "tackle",     "negative","murillo"),
     ev(MA, 45, "own", "tackle",     "positive","bellido"),
+    ev(MA, 50, "own", "tackle",     "negative","barrera"),
+    ev(MA, 52, "own", "tackle",     "negative","portillo"),
+    ev(MA, 56, "own", "tackle",     "missed",  "ortiz"),
     ev(MA, 58, "own", "tackle",     "positive","murillo"),
+    ev(MA, 63, "own", "tackle",     "negative","achigar"),
+    ev(MA, 67, "own", "tackle",     "negative","keller"),
+    ev(MA, 70, "own", "tackle",     "negative","fernandez"),
     ev(MA, 74, "own", "tackle",     "positive","murillo"),
     ev(MA, 77, "own", "tackle",     "positive","portillo"),
     # Patoruzú — scrums
@@ -160,21 +175,37 @@ events_b = [
     ev(MB, 77, "own", "conversion", "scored",  "cardoso"),
     # Patoruzú — tackles (partido físico)
     ev(MB,  6, "own", "tackle",     "positive","achigar"),
+    ev(MB,  8, "own", "tackle",     "negative","roldan"),
+    ev(MB, 11, "own", "tackle",     "negative","portillo"),
     ev(MB, 12, "own", "tackle",     "positive","bellido"),
+    ev(MB, 14, "own", "tackle",     "negative","murillo"),
+    ev(MB, 15, "own", "tackle",     "negative","barrera"),
     ev(MB, 16, "own", "tackle",     "positive","apraiz_v"),
     ev(MB, 18, "own", "tackle",     "positive","murillo"),
+    ev(MB, 20, "own", "tackle",     "negative","apraiz_v"),
     ev(MB, 21, "own", "tackle",     "positive","portillo"),
+    ev(MB, 24, "own", "tackle",     "negative","ortiz"),
     ev(MB, 25, "own", "tackle",     "positive","bellido"),
+    ev(MB, 28, "own", "tackle",     "negative","achigar"),
+    ev(MB, 29, "own", "tackle",     "negative","ramos"),
     ev(MB, 30, "own", "tackle",     "missed",  "ramos"),
     ev(MB, 33, "own", "tackle",     "positive","achigar"),
+    ev(MB, 36, "own", "tackle",     "negative","sanmartin"),
     ev(MB, 38, "own", "tackle",     "positive","velazquez"),
+    ev(MB, 40, "own", "tackle",     "negative","bellido"),
     ev(MB, 44, "own", "tackle",     "positive","murillo"),
+    ev(MB, 47, "own", "tackle",     "negative","fernandez"),
     ev(MB, 49, "own", "tackle",     "positive","apraiz_v"),
+    ev(MB, 51, "own", "tackle",     "negative","lanus_c"),
     ev(MB, 53, "own", "tackle",     "positive","bellido"),
+    ev(MB, 55, "own", "tackle",     "negative","velazquez"),
+    ev(MB, 57, "own", "tackle",     "missed",  "keller"),
     ev(MB, 58, "own", "tackle",     "positive","portillo"),
     ev(MB, 62, "own", "tackle",     "positive","murillo"),
+    ev(MB, 65, "own", "tackle",     "negative","achigar"),
     ev(MB, 69, "own", "tackle",     "positive","bellido"),
     ev(MB, 71, "own", "tackle",     "positive","velazquez"),
+    ev(MB, 75, "own", "tackle",     "negative","apraiz_v"),
     ev(MB, 78, "own", "tackle",     "positive","striglio"),
     # Patoruzú — scrums
     ev(MB,  4, "own", "scrum",      "won"),
@@ -208,6 +239,181 @@ mplayers_b = match_players(
     MB,
     minute_outs={"ramos": 55, "murillo": 60},
     minute_ins={"griffiths": 55, "striglio": 60},
+)
+
+# ═══════════════════════════════════════════════════════════════════════════
+# MATCH C: vs Los Tilos RC — 2026-09-12 — Loss 10-18
+# ═══════════════════════════════════════════════════════════════════════════
+MC = str(uuid.uuid4())
+
+events_c = [
+    # Patoruzú
+    ev(MC, 12, "own", "try",        "scored",  "achigar"),
+    ev(MC, 13, "own", "conversion", "missed",  "cardoso"),
+    ev(MC, 55, "own", "penal",      "kicked",  "cardoso"),
+    ev(MC, 71, "own", "try",        "scored",  "bellido"),
+    ev(MC, 72, "own", "conversion", "missed",  "cardoso"),
+    # tackles
+    ev(MC,  8, "own", "tackle",     "positive","murillo"),
+    ev(MC, 11, "own", "tackle",     "negative","achigar"),
+    ev(MC, 14, "own", "tackle",     "positive","bellido"),
+    ev(MC, 19, "own", "tackle",     "negative","portillo"),
+    ev(MC, 23, "own", "tackle",     "missed",  "roldan"),
+    ev(MC, 27, "own", "tackle",     "positive","murillo"),
+    ev(MC, 31, "own", "tackle",     "negative","ramos"),
+    ev(MC, 35, "own", "tackle",     "positive","achigar"),
+    ev(MC, 40, "own", "tackle",     "negative","bellido"),
+    ev(MC, 44, "own", "tackle",     "positive","apraiz_v"),
+    ev(MC, 48, "own", "tackle",     "negative","velazquez"),
+    ev(MC, 53, "own", "tackle",     "positive","murillo"),
+    ev(MC, 57, "own", "tackle",     "missed",  "ortiz"),
+    ev(MC, 62, "own", "tackle",     "negative","portillo"),
+    ev(MC, 66, "own", "tackle",     "positive","bellido"),
+    ev(MC, 70, "own", "tackle",     "negative","murillo"),
+    ev(MC, 75, "own", "tackle",     "positive","achigar"),
+    # scrums / lineouts
+    ev(MC,  6, "own", "scrum",      "lost"),
+    ev(MC, 38, "own", "scrum",      "won"),
+    ev(MC, 60, "own", "scrum",      "lost"),
+    ev(MC, 10, "own", "lineout",    "won"),
+    ev(MC, 42, "own", "lineout",    "lost"),
+    ev(MC, 68, "own", "lineout",    "won"),
+    # tarjeta
+    ev(MC, 50, "own", "tarjeta",    "yellow",  "roldan"),
+    # rival
+    ev(MC, 20, "rival", "try",        "scored"),
+    ev(MC, 21, "rival", "conversion", "scored"),
+    ev(MC, 33, "rival", "penal",      "kicked"),
+    ev(MC, 47, "rival", "try",        "scored"),
+    ev(MC, 48, "rival", "conversion", "scored"),
+    ev(MC, 63, "rival", "penal",      "kicked"),
+]
+
+subs_c = [
+    sub(MC, 60, "portillo", "apraiz_a", "Lock"),
+]
+
+mplayers_c = match_players(
+    MC,
+    minute_outs={"portillo": 60},
+    minute_ins={"apraiz_a": 60},
+)
+
+# ═══════════════════════════════════════════════════════════════════════════
+# MATCH D: vs Champagnat RC — 2026-09-19 — Draw 17-17
+# ═══════════════════════════════════════════════════════════════════════════
+MD = str(uuid.uuid4())
+
+events_d = [
+    # Patoruzú
+    ev(MD,  9, "own", "try",        "scored",  "velazquez"),
+    ev(MD, 10, "own", "conversion", "scored",  "cardoso"),
+    ev(MD, 38, "own", "penal",      "kicked",  "cardoso"),
+    ev(MD, 54, "own", "try",        "scored",  "fernandez"),
+    ev(MD, 55, "own", "conversion", "missed",  "cardoso"),
+    ev(MD, 79, "own", "penal",      "kicked",  "cardoso"),
+    # tackles
+    ev(MD,  5, "own", "tackle",     "positive","bellido"),
+    ev(MD,  7, "own", "tackle",     "negative","murillo"),
+    ev(MD, 13, "own", "tackle",     "positive","achigar"),
+    ev(MD, 17, "own", "tackle",     "negative","barrera"),
+    ev(MD, 22, "own", "tackle",     "positive","murillo"),
+    ev(MD, 26, "own", "tackle",     "negative","apraiz_v"),
+    ev(MD, 30, "own", "tackle",     "missed",  "velazquez"),
+    ev(MD, 34, "own", "tackle",     "positive","bellido"),
+    ev(MD, 39, "own", "tackle",     "negative","achigar"),
+    ev(MD, 43, "own", "tackle",     "positive","portillo"),
+    ev(MD, 47, "own", "tackle",     "negative","murillo"),
+    ev(MD, 52, "own", "tackle",     "positive","bellido"),
+    ev(MD, 58, "own", "tackle",     "negative","ramos"),
+    ev(MD, 63, "own", "tackle",     "positive","achigar"),
+    ev(MD, 68, "own", "tackle",     "negative","velazquez"),
+    ev(MD, 73, "own", "tackle",     "positive","murillo"),
+    ev(MD, 77, "own", "tackle",     "missed",  "ortiz"),
+    # scrums / lineouts
+    ev(MD, 15, "own", "scrum",      "won"),
+    ev(MD, 44, "own", "scrum",      "won"),
+    ev(MD, 70, "own", "scrum",      "lost"),
+    ev(MD, 11, "own", "lineout",    "won"),
+    ev(MD, 50, "own", "lineout",    "stolen"),
+    ev(MD, 72, "own", "lineout",    "won"),
+    # rival
+    ev(MD, 18, "rival", "try",        "scored"),
+    ev(MD, 19, "rival", "conversion", "scored"),
+    ev(MD, 29, "rival", "penal",      "kicked"),
+    ev(MD, 61, "rival", "try",        "scored"),
+    ev(MD, 62, "rival", "conversion", "missed"),
+    ev(MD, 75, "rival", "penal",      "kicked"),
+]
+
+subs_d = [
+    sub(MD, 65, "barrera", "salmeri", "Hooker"),
+]
+
+mplayers_d = match_players(
+    MD,
+    minute_outs={"barrera": 65},
+    minute_ins={"salmeri": 65},
+)
+
+# ═══════════════════════════════════════════════════════════════════════════
+# MATCH E: vs CRAR — 2026-09-26 — Win 28-10
+# ═══════════════════════════════════════════════════════════════════════════
+ME = str(uuid.uuid4())
+
+events_e = [
+    # Patoruzú
+    ev(ME,  7, "own", "try",        "scored",  "achigar"),
+    ev(ME,  8, "own", "conversion", "scored",  "cardoso"),
+    ev(ME, 23, "own", "try",        "scored",  "sanmartin"),
+    ev(ME, 24, "own", "conversion", "scored",  "cardoso"),
+    ev(ME, 41, "own", "penal",      "kicked",  "cardoso"),
+    ev(ME, 58, "own", "try",        "scored",  "murillo"),
+    ev(ME, 59, "own", "conversion", "scored",  "cardoso"),
+    ev(ME, 72, "own", "try",        "scored",  "bellido"),
+    ev(ME, 73, "own", "conversion", "missed",  "cardoso"),
+    # tackles
+    ev(ME,  4, "own", "tackle",     "positive","bellido"),
+    ev(ME,  6, "own", "tackle",     "negative","portillo"),
+    ev(ME, 10, "own", "tackle",     "positive","murillo"),
+    ev(ME, 14, "own", "tackle",     "negative","achigar"),
+    ev(ME, 18, "own", "tackle",     "positive","apraiz_v"),
+    ev(ME, 21, "own", "tackle",     "positive","bellido"),
+    ev(ME, 25, "own", "tackle",     "negative","ramos"),
+    ev(ME, 29, "own", "tackle",     "positive","murillo"),
+    ev(ME, 33, "own", "tackle",     "negative","velazquez"),
+    ev(ME, 37, "own", "tackle",     "positive","achigar"),
+    ev(ME, 42, "own", "tackle",     "missed",  "keller"),
+    ev(ME, 46, "own", "tackle",     "positive","bellido"),
+    ev(ME, 50, "own", "tackle",     "negative","murillo"),
+    ev(ME, 54, "own", "tackle",     "positive","portillo"),
+    ev(ME, 60, "own", "tackle",     "negative","barrera"),
+    ev(ME, 64, "own", "tackle",     "positive","achigar"),
+    ev(ME, 68, "own", "tackle",     "positive","bellido"),
+    ev(ME, 74, "own", "tackle",     "negative","apraiz_v"),
+    ev(ME, 78, "own", "tackle",     "positive","murillo"),
+    # scrums / lineouts
+    ev(ME, 12, "own", "scrum",      "won"),
+    ev(ME, 35, "own", "scrum",      "won"),
+    ev(ME, 62, "own", "scrum",      "won"),
+    ev(ME,  9, "own", "lineout",    "won"),
+    ev(ME, 38, "own", "lineout",    "won"),
+    ev(ME, 66, "own", "lineout",    "lost"),
+    # rival
+    ev(ME, 31, "rival", "try",        "scored"),
+    ev(ME, 32, "rival", "conversion", "scored"),
+    ev(ME, 52, "rival", "penal",      "kicked"),
+]
+
+subs_e = [
+    sub(ME, 60, "ramos",   "griffiths", "Prop"),
+    sub(ME, 68, "achigar", "chludil",   "N8"),
+]
+
+mplayers_e = match_players(
+    ME,
+    minute_outs={"ramos": 60, "achigar": 68},
+    minute_ins={"griffiths": 60, "chludil": 68},
 )
 
 
@@ -252,7 +458,9 @@ def calc_player_deltas(all_events, all_mplayers, final_minute=80):
             d["tackles_total"] += 1
             if result == "positive":
                 d["tackles_positive"] += 1
-            else:
+            elif result == "negative":
+                d["tackles_negative"] += 1
+            elif result == "missed":
                 d["tackles_missed"] += 1
         elif type_ == "kick":
             d["kicks"] += 1
@@ -275,50 +483,48 @@ def calc_player_deltas(all_events, all_mplayers, final_minute=80):
 conn = sqlite3.connect(DB)
 c = conn.cursor()
 
-# Matches
-c.execute("""
-    INSERT INTO matches (id, date, rival, competition, venue, score_own, score_rival,
-                         period, start_timestamp, accumulated_time, status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-""", (MA, "2026-08-22", "Club Atlético del Rosario",
-      "Torneo Austral 2026 (Primera División)", "Cancha de Patoruzú",
-      34, 7, 2, None, 4800000, "finished"))
-
-c.execute("""
-    INSERT INTO matches (id, date, rival, competition, venue, score_own, score_rival,
-                         period, start_timestamp, accumulated_time, status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-""", (MB, "2026-09-05", "Tala RC Córdoba",
-      "Torneo Austral 2026 (Primera División)", "Cancha de Tala",
-      21, 17, 2, None, 4800000, "finished"))
+MATCHES = [
+    (MA, "2026-08-22", "Club Atlético del Rosario", "Torneo Austral 2026 (Primera División)", "Cancha de Patoruzú",       34,  7),
+    (MB, "2026-09-05", "Tala RC Córdoba",            "Torneo Austral 2026 (Primera División)", "Cancha de Tala",           21, 17),
+    (MC, "2026-09-12", "Los Tilos RC",               "Torneo Austral 2026 (Primera División)", "Cancha de Los Tilos",      10, 18),
+    (MD, "2026-09-19", "Champagnat RC",              "Torneo Austral 2026 (Primera División)", "Cancha de Patoruzú",       17, 17),
+    (ME, "2026-09-26", "CRAR",                       "Torneo Austral 2026 (Primera División)", "Cancha de CRAR",           28, 10),
+]
+for mid, date, rival, comp, venue, score_own, score_rival in MATCHES:
+    c.execute("""
+        INSERT INTO matches (id, date, rival, competition, venue, score_own, score_rival,
+                             period, start_timestamp, accumulated_time, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (mid, date, rival, comp, venue, score_own, score_rival, 2, None, 4800000, "finished"))
 
 # Match players
 c.executemany("""
     INSERT INTO match_players (id, match_id, player_id, number, position, is_starter, minute_in, minute_out)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-""", mplayers_a + mplayers_b)
+""", mplayers_a + mplayers_b + mplayers_c + mplayers_d + mplayers_e)
 
 # Events
 c.executemany("""
     INSERT INTO events (id, match_id, minute, period, team, type, result, zone, player_id, notes)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-""", events_a + events_b)
+""", events_a + events_b + events_c + events_d + events_e)
 
 # Substitutions
 c.executemany("""
     INSERT INTO substitutions (id, match_id, minute, player_out_id, player_in_id, position)
     VALUES (?, ?, ?, ?, ?, ?)
-""", subs_a + subs_b)
+""", subs_a + subs_b + subs_c + subs_d + subs_e)
 
 # Player stats
-all_events   = events_a + events_b
-all_mplayers = mplayers_a + mplayers_b
+all_events   = events_a + events_b + events_c + events_d + events_e
+all_mplayers = mplayers_a + mplayers_b + mplayers_c + mplayers_d + mplayers_e
 deltas = calc_player_deltas(all_events, all_mplayers, final_minute=80)
 
 STAT_COLS = [
     "games_played", "minutes_played", "tries", "conversions_attempts", "conversions_scored",
     "drops_attempts", "drops_scored", "penals_scored", "tackles_total", "tackles_positive",
-    "tackles_missed", "kicks", "turnovers", "lineouts", "yellow_cards", "red_cards",
+    "tackles_negative", "tackles_missed", "kicks", "turnovers", "lineouts",
+    "yellow_cards", "red_cards",
 ]
 for player_id, d in deltas.items():
     sets = ", ".join(f"{col} = {col} + ?" for col in STAT_COLS)
@@ -329,7 +535,9 @@ conn.commit()
 conn.close()
 
 print("✓ Mock data insertado:")
-print(f"  Match A ({MA[:8]}…): vs Club Atlético del Rosario — 34-7")
-print(f"  Match B ({MB[:8]}…): vs Tala RC Córdoba — 21-17")
-print(f"  Eventos A: {len(events_a)}, Eventos B: {len(events_b)}")
+for mid, date, rival, comp, venue, score_own, score_rival in MATCHES:
+    result = "W" if score_own > score_rival else ("D" if score_own == score_rival else "L")
+    print(f"  [{result}] {date} vs {rival} — {score_own}-{score_rival}")
+total_events = len(events_a) + len(events_b) + len(events_c) + len(events_d) + len(events_e)
+print(f"  Total eventos: {total_events}")
 print(f"  Jugadores con stats actualizados: {len(deltas)}")

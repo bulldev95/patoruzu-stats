@@ -149,6 +149,9 @@ class TestAccumulatePlayerStat:
     def test_tackle_positive(self):
         assert self._s("tackle", "positive") == {"tackles_total": 1, "tackles_positive": 1}
 
+    def test_tackle_negative(self):
+        assert self._s("tackle", "negative") == {"tackles_total": 1, "tackles_negative": 1}
+
     def test_tackle_missed(self):
         assert self._s("tackle", "missed") == {"tackles_total": 1, "tackles_missed": 1}
 

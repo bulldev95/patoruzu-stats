@@ -46,11 +46,11 @@
       {% endif %}
 
       <!-- Barras horizontales: top tackleadores -->
-      {% set top_tackles = players | sort(attribute='tackles_positive', reverse=True) | selectattr('tackles_positive', 'gt', 0) | list %}
+      {% set top_tackles = players | sort(attribute='tackles_total', reverse=True) | selectattr('tackles_total', 'gt', 0) | list %}
       {% if top_tackles %}
       <div class="card bg-base-100 shadow">
         <div class="card-body p-4">
-          <h2 class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-3">Top tackles positivos</h2>
+          <h2 class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-3">Top tackles</h2>
           <div style="height: {{ [top_tackles[:8]|length * 36, 120]|max }}px">
             <canvas id="chartTackles"></canvas>
           </div>
@@ -71,6 +71,7 @@
             <th class="text-center">Tries</th>
             <th class="text-center">Tackles</th>
             <th class="text-center">T+</th>
+            <th class="text-center">T~</th>
             <th class="text-center">Pérd</th>
             <th class="text-center">K-O</th>
             <th class="text-center">Penal</th>
@@ -92,6 +93,7 @@
             <td class="text-center {% if p.tries > 0 %}font-bold text-success{% endif %}">{{ p.tries }}</td>
             <td class="text-center">{{ p.tackles_total }}</td>
             <td class="text-center text-success">{{ p.tackles_positive }}</td>
+            <td class="text-center">{{ p.tackles_negative }}</td>
             <td class="text-center">{{ p.turnovers }}</td>
             <td class="text-center {% if p.knock_ons > 0 %}text-error{% endif %}">{{ p.knock_ons if p.knock_ons > 0 else "–" }}</td>
             <td class="text-center">{{ p.penals_scored }}</td>
@@ -145,11 +147,12 @@
     });
     {% endif %}
 
-    {% set top_tackles = players | sort(attribute='tackles_positive', reverse=True) | selectattr('tackles_positive', 'gt', 0) | list %}
+    {% set top_tackles = players | sort(attribute='tackles_total', reverse=True) | selectattr('tackles_total', 'gt', 0) | list %}
     {% if top_tackles %}
     // ── Barras horizontales: top tackles ──────────────────────────────────
     const tackleLabels  = [{% for p in top_tackles[:8] %}"{{ p.surname }}"{% if not loop.last %},{% endif %}{% endfor %}];
     const tacklePos     = [{% for p in top_tackles[:8] %}{{ p.tackles_positive }}{% if not loop.last %},{% endif %}{% endfor %}];
+    const tackleNeg     = [{% for p in top_tackles[:8] %}{{ p.tackles_negative }}{% if not loop.last %},{% endif %}{% endfor %}];
     const tackleMissed  = [{% for p in top_tackles[:8] %}{{ p.tackles_missed }}{% if not loop.last %},{% endif %}{% endfor %}];
 
     new Chart(document.getElementById("chartTackles"), {
@@ -161,6 +164,12 @@
             label: "Positivos",
             data: tacklePos,
             backgroundColor: "#22c55e",
+            borderRadius: 4,
+          },
+          {
+            label: "Negativos",
+            data: tackleNeg,
+            backgroundColor: "#f59e0b",
             borderRadius: 4,
           },
           {
