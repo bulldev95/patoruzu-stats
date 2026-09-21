@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Estadísticas del equipo — Patoruzú</title>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body class="bg-base-200 min-h-screen">
+
+  <div class="max-w-2xl mx-auto p-4">
+
+    <div class="flex items-center gap-3 mb-6">
+      <a href="/" class="btn btn-ghost btn-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </a>
+      <h1 class="text-2xl font-bold">Estadísticas del equipo</h1>
+    </div>
+
+    {% if not matches %}
+    <div class="card bg-base-100 shadow">
+      <div class="card-body items-center text-center py-12">
+        <p class="text-base-content/50">No hay partidos registrados todavía.</p>
+      </div>
+    </div>
+    {% else %}
+
+    <!-- Resumen global W/L/D + puntos -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+      <div class="stat bg-base-100 rounded-box shadow p-4">
+        <div class="stat-title text-xs">Partidos</div>
+        <div class="stat-value text-2xl">{{ totals.matches }}</div>
+      </div>
+      <div class="stat bg-base-100 rounded-box shadow p-4">
+        <div class="stat-title text-xs">Victorias</div>
+        <div class="stat-value text-2xl text-success">{{ totals.wins }}</div>
+      </div>
+      <div class="stat bg-base-100 rounded-box shadow p-4">
+        <div class="stat-title text-xs">Derrotas</div>
+        <div class="stat-value text-2xl text-error">{{ totals.losses }}</div>
+      </div>
+      <div class="stat bg-base-100 rounded-box shadow p-4">
+        <div class="stat-title text-xs">Empates</div>
+        <div class="stat-value text-2xl">{{ totals.draws }}</div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+      <div class="stat bg-base-100 rounded-box shadow p-4">
+        <div class="stat-title text-xs">Puntos anotados</div>
+        <div class="stat-value text-2xl">{{ totals.points_for }}</div>
+      </div>
+      <div class="stat bg-base-100 rounded-box shadow p-4">
+        <div class="stat-title text-xs">Puntos recibidos</div>
+        <div class="stat-value text-2xl">{{ totals.points_against }}</div>
+      </div>
+      <div class="stat bg-base-100 rounded-box shadow p-4">
+        <div class="stat-title text-xs">Diferencia</div>
+        {% set diff = totals.points_for - totals.points_against %}
+        <div class="stat-value text-2xl {% if diff > 0 %}text-success{% elif diff < 0 %}text-error{% endif %}">
+          {{ "+" if diff > 0 else "" }}{{ diff }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+
+      <!-- Barras W/D/L -->
+      <div class="card bg-base-100 shadow">
+        <div class="card-body p-4">
+          <h2 class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-1">Resultados</h2>
+          <p class="text-xs text-base-content/40 mb-3">{{ totals.matches }} partido{{ 's' if totals.matches != 1 }} jugado{{ 's' if totals.matches != 1 }}</p>
+          <div style="height:150px">
+            <canvas id="chartResults"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Barras puntos por partido -->
+      <div class="card bg-base-100 shadow">
+        <div class="card-body p-4">
+          <h2 class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-3">Puntos por partido</h2>
+          <div style="height:180px">
+            <canvas id="chartPoints"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Stats colectivas acumuladas -->
+    {% if collective %}
+    <div class="card bg-base-100 shadow mb-6">
+      <div class="card-body p-4">
+        <h2 class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-4">Stats colectivas acumuladas</h2>
+
+        {% macro stat_row(label, value) %}
+        {% if value %}
+        <div class="flex justify-between py-1 border-b border-base-200 last:border-0">
+          <span class="text-sm text-base-content/70">{{ label }}</span>
+          <span class="text-sm font-semibold tabular-nums">{{ value }}</span>
+        </div>
+        {% endif %}
+        {% endmacro %}
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
+          <div>
+            <p class="text-xs font-medium text-base-content/40 uppercase tracking-wide mb-1">Puntos</p>
+            {{ stat_row("Tries", collective.get("tries")) }}
+            {{ stat_row("Conversiones", (collective.get("conversions_scored", 0) ~ "/" ~ collective.get("conversions_attempts", 0)) if collective.get("conversions_attempts") else None) }}
+            {{ stat_row("Drops", (collective.get("drops_scored", 0) ~ "/" ~ collective.get("drops_attempts", 0)) if collective.get("drops_attempts") else None) }}
+            {{ stat_row("Penales", collective.get("penals_scored")) }}
+
+            <p class="text-xs font-medium text-base-content/40 uppercase tracking-wide mt-3 mb-1">Tackles</p>
+            {{ stat_row("Total", collective.get("tackles_total")) }}
+            {{ stat_row("Positivos", collective.get("tackles_positive")) }}
+            {{ stat_row("Negativos", collective.get("tackles_negative")) }}
+            {{ stat_row("Fallados", collective.get("tackles_missed")) }}
+          </div>
+          <div>
+            <p class="text-xs font-medium text-base-content/40 uppercase tracking-wide mb-1">Scrum</p>
+            {{ stat_row("Ganados / Total", (collective.get("scrums_won", 0) ~ "/" ~ collective.get("scrums", 0)) if collective.get("scrums") else None) }}
+
+            <p class="text-xs font-medium text-base-content/40 uppercase tracking-wide mt-3 mb-1">Lineout</p>
+            {{ stat_row("Ganados / Total", (collective.get("lineouts_won", 0) ~ "/" ~ collective.get("lineouts", 0)) if collective.get("lineouts") else None) }}
+
+            <p class="text-xs font-medium text-base-content/40 uppercase tracking-wide mt-3 mb-1">Ruck / Maul</p>
+            {{ stat_row("Rucks ganados", (collective.get("rucks_won", 0) ~ "/" ~ collective.get("rucks", 0)) if collective.get("rucks") else None) }}
+            {{ stat_row("Mauls ganados", (collective.get("mauls_won", 0) ~ "/" ~ collective.get("mauls", 0)) if collective.get("mauls") else None) }}
+
+            <p class="text-xs font-medium text-base-content/40 uppercase tracking-wide mt-3 mb-1">Varios</p>
+            {{ stat_row("Kicks", collective.get("kicks")) }}
+            {{ stat_row("Pérdidas", collective.get("turnovers")) }}
+            {{ stat_row("Knock-ons", collective.get("knock_ons")) }}
+            {{ stat_row("Amarillas", collective.get("yellow_cards")) }}
+            {{ stat_row("Rojas", (collective.get("red_cards", 0) + collective.get("red_cards_20min", 0)) or None) }}
+          </div>
+        </div>
+
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Historial de partidos -->
+    <h2 class="text-lg font-semibold mb-3">Historial</h2>
+    <div class="flex flex-col gap-2">
+      {% for m in matches %}
+      <a href="/live/{{ m.id }}/summary" class="card bg-base-100 shadow-sm hover:bg-base-300 hover:shadow-md transition-all cursor-pointer">
+        <div class="card-body p-4 flex-row items-center justify-between">
+          <div>
+            <div class="font-semibold">vs {{ m.rival }}</div>
+            <div class="text-xs text-base-content/50">{{ m.date }} · {{ m.competition }}</div>
+          </div>
+          <div class="text-right">
+            <div class="text-xl font-bold tabular-nums">
+              {{ m.score_own }} – {{ m.score_rival }}
+            </div>
+            <div class="badge badge-sm {% if m.score_own > m.score_rival %}badge-success{% elif m.score_own < m.score_rival %}badge-error{% else %}badge-neutral{% endif %}">
+              {% if m.score_own > m.score_rival %}Victoria{% elif m.score_own < m.score_rival %}Derrota{% else %}Empate{% endif %}
+            </div>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+
+    {% endif %}
+  </div>
+
+  <script>
+    Chart.defaults.color = "#9ca3af";
+    Chart.defaults.font.family = "inherit";
+
+    // ── Barras: W/D/L ─────────────────────────────────────────────────────
+    new Chart(document.getElementById("chartResults"), {
+      type: "bar",
+      data: {
+        labels: ["Victorias", "Empates", "Derrotas"],
+        datasets: [{
+          data: [{{ totals.wins }}, {{ totals.draws }}, {{ totals.losses }}],
+          backgroundColor: ["#22c55e", "#6b7280", "#ef4444"],
+          borderRadius: 6,
+          barThickness: 40,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => ` ${ctx.raw} partido${ctx.raw !== 1 ? "s" : ""}`
+            }
+          }
+        },
+        scales: {
+          x: { grid: { display: false } },
+          y: { beginAtZero: true, ticks: { stepSize: 1 } }
+        }
+      }
+    });
+
+    // ── Barras: puntos por partido ─────────────────────────────────────────
+    const matchLabels = [
+      {% for m in matches | reverse %}
+        "vs {{ m.rival | truncate(12, True, '…') }}"{% if not loop.last %},{% endif %}
+      {% endfor %}
+    ];
+    const pointsFor     = [{% for m in matches | reverse %}{{ m.score_own }}{% if not loop.last %},{% endif %}{% endfor %}];
+    const pointsAgainst = [{% for m in matches | reverse %}{{ m.score_rival }}{% if not loop.last %},{% endif %}{% endfor %}];
+
+    new Chart(document.getElementById("chartPoints"), {
+      type: "bar",
+      data: {
+        labels: matchLabels,
+        datasets: [
+          {
+            label: "Patoruzú",
+            data: pointsFor,
+            backgroundColor: "#22c55e",
+            borderRadius: 4,
+          },
+          {
+            label: "Rival",
+            data: pointsAgainst,
+            backgroundColor: "#ef4444",
+            borderRadius: 4,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: "bottom", labels: { boxWidth: 10, padding: 8, font: { size: 11 } } }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+          y: { beginAtZero: true, grid: { color: "#e5e7eb22" }, ticks: { font: { size: 10 } } }
+        }
+      }
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resumen — Patoruzú vs {{ match.rival }}</title>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-base-200 min-h-screen pb-10">
+
+  <!-- Header -->
+  <div class="bg-neutral text-neutral-content px-4 py-5 text-center">
+    <div class="badge badge-outline badge-lg text-neutral-content/60 mb-2">Partido finalizado</div>
+    <div class="text-xs text-neutral-content/50 mb-1">{{ match.date }} · {{ match.competition }}</div>
+    <div class="flex items-center justify-center gap-6 mt-2">
+      <div class="text-center">
+        <div class="text-xs font-medium text-neutral-content/60 uppercase tracking-wide mb-1">Patoruzú</div>
+        <div class="text-6xl font-bold tabular-nums">{{ match.score_own }}</div>
+      </div>
+      <div class="text-3xl font-light text-neutral-content/40">–</div>
+      <div class="text-center">
+        <div class="text-xs font-medium text-neutral-content/60 uppercase tracking-wide mb-1 truncate max-w-28">{{ match.rival }}</div>
+        <div class="text-6xl font-bold tabular-nums">{{ match.score_rival }}</div>
+      </div>
+    </div>
+    <div class="text-xs text-neutral-content/40 mt-2">Duración: {{ total_minutes }}′</div>
+  </div>
+
+  <div class="p-3 space-y-4">
+
+    <!-- Collective stats -->
+    <div class="card bg-base-100 shadow">
+      <div class="card-body p-4">
+        <h2 class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-3">Estadísticas colectivas — Patoruzú</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-2 text-sm">
+
+          {% macro stat_row(label, value) %}
+          {% if value %}
+          <div class="flex justify-between">
+            <span class="text-base-content/60">{{ label }}</span>
+            <span class="font-semibold tabular-nums">{{ value }}</span>
+          </div>
+          {% endif %}
+          {% endmacro %}
+
+          {{ stat_row("Tries", collective.get("tries")) }}
+          {{ stat_row("Conversiones", (collective.get("conversions_scored", 0) ~ "/" ~ collective.get("conversions_attempts", 0)) if collective.get("conversions_attempts") else None) }}
+          {{ stat_row("Drops", (collective.get("drops_scored", 0) ~ "/" ~ collective.get("drops_attempts", 0)) if collective.get("drops_attempts") else None) }}
+          {{ stat_row("Penales", collective.get("penals_scored")) }}
+          {{ stat_row("Tackles", collective.get("tackles_total")) }}
+          {{ stat_row("T. positivos", collective.get("tackles_positive")) }}
+          {{ stat_row("T. negativos", collective.get("tackles_negative")) }}
+          {{ stat_row("T. fallados", collective.get("tackles_missed")) }}
+          {{ stat_row("Scrums ganados", (collective.get("scrums_won", 0) ~ "/" ~ collective.get("scrums", 0)) if collective.get("scrums") else None) }}
+          {{ stat_row("Lineouts ganados", (collective.get("lineouts_won", 0) ~ "/" ~ collective.get("lineouts", 0)) if collective.get("lineouts") else None) }}
+          {{ stat_row("Rucks ganados", (collective.get("rucks_won", 0) ~ "/" ~ collective.get("rucks", 0)) if collective.get("rucks") else None) }}
+          {{ stat_row("Mauls ganados", (collective.get("mauls_won", 0) ~ "/" ~ collective.get("mauls", 0)) if collective.get("mauls") else None) }}
+          {{ stat_row("Kicks", collective.get("kicks")) }}
+          {{ stat_row("Pérdidas", collective.get("turnovers")) }}
+          {{ stat_row("Knock-ons", collective.get("knock_ons")) }}
+          {{ stat_row("Amarillas", collective.get("yellow_cards")) }}
+          {{ stat_row("Rojas", collective.get("red_cards")) }}
+          {{ stat_row("Rojas 20′", collective.get("red_cards_20min")) }}
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Player stats -->
+    <div class="card bg-base-100 shadow">
+      <div class="card-body p-4">
+        <h2 class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-3">Estadísticas individuales</h2>
+        <div class="overflow-x-auto -mx-4">
+          <table class="table table-xs text-xs whitespace-nowrap">
+            <thead>
+              <tr class="text-base-content/50">
+                <th>#</th>
+                <th>Jugador</th>
+                <th class="text-center">Min</th>
+                <th class="text-center">Try</th>
+                <th class="text-center">Conv</th>
+                <th class="text-center">Drop</th>
+                <th class="text-center">Pen</th>
+                <th class="text-center">Tck</th>
+                <th class="text-center">T+</th>
+                <th class="text-center">T~</th>
+                <th class="text-center">T-</th>
+                <th class="text-center">Kick</th>
+                <th class="text-center">Pérd</th>
+                <th class="text-center">K-O</th>
+                <th class="text-center">🟨</th>
+                <th class="text-center">🟥</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in participants %}
+              {% set s = item.stats %}
+              <tr class="{{ 'opacity-50' if item.minutes == 0 else '' }}">
+                <td class="font-mono text-base-content/50">{{ item.mp.number }}</td>
+                <td>
+                  <span class="font-medium">{{ item.player.surname }}</span>,
+                  {{ item.player.name }}
+                  {% if item.mp.position %}
+                  <span class="text-base-content/40 text-xs ml-1">{{ item.mp.position }}</span>
+                  {% endif %}
+                </td>
+                <td class="text-center tabular-nums">{{ item.minutes }}′</td>
+                <td class="text-center tabular-nums">{{ s.get("tries") or "–" }}</td>
+                <td class="text-center tabular-nums">
+                  {%- if s.get("conversions_attempts") -%}
+                    {{ s.get("conversions_scored", 0) }}/{{ s.conversions_attempts }}
+                  {%- else -%}–{%- endif -%}
+                </td>
+                <td class="text-center tabular-nums">
+                  {%- if s.get("drops_attempts") -%}
+                    {{ s.get("drops_scored", 0) }}/{{ s.drops_attempts }}
+                  {%- else -%}–{%- endif -%}
+                </td>
+                <td class="text-center tabular-nums">{{ s.get("penals_scored") or "–" }}</td>
+                <td class="text-center tabular-nums">{{ s.get("tackles_total") or "–" }}</td>
+                <td class="text-center tabular-nums">{{ s.get("tackles_positive") or "–" }}</td>
+                <td class="text-center tabular-nums">{{ s.get("tackles_negative") or "–" }}</td>
+                <td class="text-center tabular-nums">{{ s.get("tackles_missed") or "–" }}</td>
+                <td class="text-center tabular-nums">{{ s.get("kicks") or "–" }}</td>
+                <td class="text-center tabular-nums">{{ s.get("turnovers") or "–" }}</td>
+                <td class="text-center tabular-nums">{{ s.get("knock_ons") or "–" }}</td>
+                <td class="text-center tabular-nums">{{ s.get("yellow_cards") or "–" }}</td>
+                <td class="text-center tabular-nums">
+                  {%- set r = s.get("red_cards", 0) + s.get("red_cards_20min", 0) -%}
+                  {{ r if r else "–" }}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Substitutions -->
+    {% if substitutions %}
+    <div class="card bg-base-100 shadow">
+      <div class="card-body p-4">
+        <h2 class="text-xs font-semibold uppercase tracking-wide text-base-content/50 mb-3">Sustituciones</h2>
+        <div class="space-y-1.5">
+          {% for item in substitutions %}
+          <div class="flex items-center gap-2 text-sm">
+            <span class="badge badge-ghost badge-sm font-mono">{{ item.sub.minute }}′</span>
+            <span class="font-medium">{{ item.player_out.surname }}</span>
+            <span class="text-base-content/40">→</span>
+            <span class="font-medium">{{ item.player_in.surname }}</span>
+            {% if item.sub.position %}
+            <span class="text-base-content/40 text-xs">({{ item.sub.position }})</span>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Back link -->
+    <div class="text-center pt-2">
+      <a href="/" class="btn btn-ghost btn-sm">← Inicio</a>
+    </div>
+
+  </div>
+</body>
+</html>

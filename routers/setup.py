@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from models import Match, MatchPlayer, Player
+from repositories import player_repo
 from utils.pdf_parser import parse_team_sheet, save_upload_to_tempfile
 
 router = APIRouter(prefix="/setup")
@@ -74,7 +75,7 @@ async def confirm_setup(
         name = form[f"name_{idx}"]
         personal_id = form[f"personal_id_{idx}"]
 
-        player = db.query(Player).filter_by(personal_id=personal_id).first()
+        player = player_repo.get_by_personal_id(db, personal_id)
         if not player:
             player = Player(personal_id=personal_id, surname=surname, name=name)
             db.add(player)
@@ -89,7 +90,7 @@ async def confirm_setup(
             number=number,
             position=POSITIONS.get(number) if number <= 15 else None,
             is_starter=number <= 15,
-            minute_in=0,
+            minute_in=0 if number <= 15 else -1,
         )
         db.add(mp)
 

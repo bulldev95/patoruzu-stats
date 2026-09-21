@@ -16,21 +16,21 @@
       <label class="label"><span class="label-text font-medium">Card type</span></label>
       <div class="grid grid-cols-3 gap-2">
         <label class="cursor-pointer" @click="sel = 'yellow'">
-          <input type="radio" name="result" value="yellow" class="hidden" required>
+          <input type="radio" name="result" value="yellow" class="hidden">
           <div class="p-3 rounded-lg border-2 text-center text-sm font-semibold transition-colors select-none"
                :class="sel === 'yellow' ? 'bg-yellow-400 border-yellow-500 text-yellow-900' : 'border-base-300 hover:border-base-content/30'">
             Yellow
           </div>
         </label>
         <label class="cursor-pointer" @click="sel = 'red'">
-          <input type="radio" name="result" value="red" class="hidden" required>
+          <input type="radio" name="result" value="red" class="hidden">
           <div class="p-3 rounded-lg border-2 text-center text-sm font-semibold transition-colors select-none"
                :class="sel === 'red' ? 'bg-red-600 border-red-700 text-white' : 'border-base-300 hover:border-base-content/30'">
             Red
           </div>
         </label>
         <label class="cursor-pointer" @click="sel = 'red_20'">
-          <input type="radio" name="result" value="red_20" class="hidden" required>
+          <input type="radio" name="result" value="red_20" class="hidden">
           <div class="p-3 rounded-lg border-2 text-center text-sm font-semibold transition-colors select-none"
                :class="sel === 'red_20' ? 'bg-red-200 border-red-400 text-red-900' : 'border-base-300 hover:border-base-content/30'">
             Red 20

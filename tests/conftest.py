@@ -143,7 +143,7 @@ def sample_match(db):
             number=number,
             position=POSITIONS.get(number) if number <= 15 else None,
             is_starter=number <= 15,
-            minute_in=0,
+            minute_in=0 if number <= 15 else -1,
         )
         db.add(mp)
 

@@ -244,7 +244,11 @@ class TestSaveEvent:
         assert sample_match.score_own == 0
 
     def test_score_oob_in_response(self, client, sample_match):
-        response = client.post(f"/live/{sample_match.id}/events", data=event_form("try", "scored"))
+        response = client.post(
+            f"/live/{sample_match.id}/events",
+            data=event_form("try", "scored"),
+            headers={"HX-Request": "true"},
+        )
         assert 'id="score-own"' in response.text
         assert "5" in response.text
 
@@ -377,6 +381,16 @@ class TestPlayerStats:
         assert player.tackles_positive == 1
         assert player.tackles_missed == 0
 
+    def test_tackle_negative_updates_tackles(self, client, sample_match, db):
+        pid = self._player_id(sample_match, db)
+        client.post(f"/live/{sample_match.id}/events", data=event_form("tackle", "negative", player_id=pid))
+        player = self._get_player(sample_match, db)
+        db.refresh(player)
+        assert player.tackles_total == 1
+        assert player.tackles_negative == 1
+        assert player.tackles_positive == 0
+        assert player.tackles_missed == 0
+
     def test_tackle_missed_updates_tackles(self, client, sample_match, db):
         pid = self._player_id(sample_match, db)
         client.post(f"/live/{sample_match.id}/events", data=event_form("tackle", "missed", player_id=pid))
@@ -385,6 +399,7 @@ class TestPlayerStats:
         assert player.tackles_total == 1
         assert player.tackles_missed == 1
         assert player.tackles_positive == 0
+        assert player.tackles_negative == 0
 
     def test_yellow_card_updates_yellow_cards(self, client, sample_match, db):
         pid = self._player_id(sample_match, db)
@@ -431,12 +446,12 @@ class TestPlayerStats:
         db.refresh(player)
         assert player.turnovers == 1
 
-    def test_lineout_won_increments_lineouts(self, client, sample_match, db):
+    def test_lineout_does_not_update_player_stats(self, client, sample_match, db):
         pid = self._player_id(sample_match, db)
         client.post(f"/live/{sample_match.id}/events", data=event_form("lineout", "won", player_id=pid))
         player = self._get_player(sample_match, db)
         db.refresh(player)
-        assert player.lineouts == 1
+        assert player.lineouts == 0  # lineout is a team stat, not tracked per player
 
     def test_red_card_20min_updates_red_cards_20min(self, client, sample_match, db):
         pid = self._player_id(sample_match, db)
@@ -769,5 +784,8 @@ class TestDeleteEvent:
     def test_delete_oob_score_in_response(self, client, sample_match, db):
         client.post(f"/live/{sample_match.id}/events", data=event_form("try", "scored"))
         event = db.query(Event).filter_by(match_id=sample_match.id).first()
-        response = client.delete(f"/live/{sample_match.id}/events/{event.id}")
+        response = client.delete(
+            f"/live/{sample_match.id}/events/{event.id}",
+            headers={"HX-Request": "true"},
+        )
         assert 'id="score-own"' in response.text

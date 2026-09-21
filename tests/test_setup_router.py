@@ -157,7 +157,8 @@ class TestConfirmSetup:
     def test_confirm_starters_minute_in_zero(self, client, db):
         client.post("/setup/confirm", data=confirm_form_data())
         for mp in db.query(MatchPlayer).all():
-            assert mp.minute_in == 0
+            expected = 0 if mp.is_starter else -1
+            assert mp.minute_in == expected
             assert mp.minute_out is None
 
     def test_confirm_existing_player_not_duplicated(self, client, db):

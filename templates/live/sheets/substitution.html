@@ -1,0 +1,44 @@
+{% from "live/sheets/_base.html" import close_btn, submit_btn %}
+<div>
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-xl font-bold">Substitution</h2>
+    {{ close_btn() }}
+  </div>
+
+  <form hx-post="/live/{{ match_id }}/substitutions"
+        hx-target="#on-field"
+        hx-swap="innerHTML"
+        hx-on::after-request="window.dispatchEvent(new CustomEvent('sheet-done'))">
+    <input type="hidden" name="player_out_id" value="{{ player_out.id }}">
+
+    <div class="form-control mb-4">
+      <label class="label"><span class="label-text font-medium">Player out</span></label>
+      <div class="p-3 rounded-lg bg-error/10 border border-error/30 text-sm font-medium">
+        {{ player_out_mp.number }} — {{ player_out.surname }}, {{ player_out.name }}
+        <span class="text-base-content/50 ml-1">{{ player_out_mp.position }}</span>
+      </div>
+    </div>
+
+    <div class="form-control mb-4">
+      <label class="label"><span class="label-text font-medium">Player in</span></label>
+      {% if bench %}
+      <select name="player_in_id" class="select select-bordered w-full" required>
+        <option value="">Select player…</option>
+        {% for mp, player in bench %}
+        <option value="{{ player.id }}">{{ mp.number }} — {{ player.surname }}, {{ player.name }}</option>
+        {% endfor %}
+      </select>
+      {% else %}
+      <p class="text-base-content/40 text-sm p-3 bg-base-200 rounded-lg">No players on bench.</p>
+      {% endif %}
+    </div>
+
+    <div class="form-control mb-4">
+      <label class="label"><span class="label-text font-medium">Position</span></label>
+      <input type="text" name="position" value="{{ player_out_mp.position or '' }}"
+             class="input input-bordered w-full" required>
+    </div>
+
+    {{ submit_btn("Confirm substitution") }}
+  </form>
+</div>
