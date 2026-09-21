@@ -10,7 +10,7 @@
   <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body class="bg-base-200 h-screen flex flex-col overflow-hidden"
-  x-data="{ sheetOpen: false }"
+  x-data="{ sheetOpen: false, confirmClose: false }"
   @sheet-done.window="sheetOpen = false"
 >
 
@@ -115,14 +115,52 @@
     </div>
 
     {% if match.status != 'finished' %}
-    <form method="post" action="/live/{{ match.id }}/close"
-          onsubmit="return confirm('¿Finalizar el partido? Esta acción no se puede deshacer.')">
-      <button type="submit" class="btn btn-error btn-outline w-full">Finalizar partido</button>
-    </form>
+    <button @click="confirmClose = true" class="btn btn-error btn-outline w-full">
+      Finalizar partido
+    </button>
     {% else %}
     <a href="/live/{{ match.id }}/summary" class="btn btn-neutral w-full">Ver resumen</a>
     {% endif %}
 
+  </div>
+
+  <!-- Modal: confirmar cierre de partido -->
+  <div
+    x-show="confirmClose"
+    x-transition:enter="transition ease-out duration-200"
+    x-transition:enter-start="opacity-0"
+    x-transition:enter-end="opacity-100"
+    x-transition:leave="transition ease-in duration-150"
+    x-transition:leave-start="opacity-100"
+    x-transition:leave-end="opacity-0"
+    class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4"
+    style="display:none"
+    @click.self="confirmClose = false"
+  >
+    <div
+      x-transition:enter="transition ease-out duration-200"
+      x-transition:enter-start="opacity-0 scale-95"
+      x-transition:enter-end="opacity-100 scale-100"
+      x-transition:leave="transition ease-in duration-150"
+      x-transition:leave-start="opacity-100 scale-100"
+      x-transition:leave-end="opacity-0 scale-95"
+      class="bg-base-100 rounded-2xl shadow-2xl w-full max-w-sm p-6"
+    >
+      <h3 class="text-lg font-bold mb-1">¿Finalizar el partido?</h3>
+      <p class="text-sm text-base-content/60 mb-6">
+        Se actualizarán los minutos jugados y partidos de cada jugador. Esta acción no se puede deshacer.
+      </p>
+      <div class="flex gap-3">
+        <button @click="confirmClose = false" class="btn btn-ghost flex-1">
+          Cancelar
+        </button>
+        <form method="post" action="/live/{{ match.id }}/close" class="flex-1">
+          <button type="submit" class="btn btn-error w-full">
+            Finalizar
+          </button>
+        </form>
+      </div>
+    </div>
   </div>
 
   <!-- Bottom sheet backdrop -->
