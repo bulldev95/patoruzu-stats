@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from repositories import player_repo
-from services import stats_service
+from services import actions_service, stats_service
 
 router = APIRouter(prefix="/stats")
 templates = Jinja2Templates(directory="templates")
@@ -24,6 +24,13 @@ async def player_stats(request: Request, db: Session = Depends(get_db)):
     """Render the player list with career totals."""
     players = player_repo.list_with_games(db)
     return templates.TemplateResponse("stats/players.html", {"request": request, "players": players})
+
+
+@router.post("/matches/{match_id}/delete")
+async def delete_match(match_id: str, db: Session = Depends(get_db)):
+    """Delete a finished match and revert all player stats it contributed."""
+    actions_service.delete_match(db, match_id)
+    return RedirectResponse(url="/stats/team", status_code=303)
 
 
 @router.get("/players/{player_id}", response_class=HTMLResponse)

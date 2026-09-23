@@ -150,22 +150,46 @@
     <h2 class="text-lg font-semibold mb-3">Historial</h2>
     <div class="flex flex-col gap-2">
       {% for m in matches %}
-      <a href="/live/{{ m.id }}/summary" class="card bg-base-100 shadow-sm hover:bg-base-300 hover:shadow-md transition-all cursor-pointer">
-        <div class="card-body p-4 flex-row items-center justify-between">
-          <div>
-            <div class="font-semibold">vs {{ m.rival }}</div>
-            <div class="text-xs text-base-content/50">{{ m.date }} · {{ m.competition }}</div>
-          </div>
-          <div class="text-right">
-            <div class="text-xl font-bold tabular-nums">
-              {{ m.score_own }} – {{ m.score_rival }}
+      <div class="card bg-base-100 shadow-sm flex-row items-center">
+        <a href="/live/{{ m.id }}/summary" class="flex-1 hover:bg-base-300 hover:shadow-md transition-all cursor-pointer rounded-l-2xl">
+          <div class="card-body p-4 flex-row items-center justify-between">
+            <div>
+              <div class="font-semibold">vs {{ m.rival }}</div>
+              <div class="text-xs text-base-content/50">{{ m.date }} · {{ m.competition }}</div>
             </div>
-            <div class="badge badge-sm {% if m.score_own > m.score_rival %}badge-success{% elif m.score_own < m.score_rival %}badge-error{% else %}badge-neutral{% endif %}">
-              {% if m.score_own > m.score_rival %}Victoria{% elif m.score_own < m.score_rival %}Derrota{% else %}Empate{% endif %}
+            <div class="text-right">
+              <div class="text-xl font-bold tabular-nums">
+                {{ m.score_own }} – {{ m.score_rival }}
+              </div>
+              <div class="badge badge-sm {% if m.score_own > m.score_rival %}badge-success{% elif m.score_own < m.score_rival %}badge-error{% else %}badge-neutral{% endif %}">
+                {% if m.score_own > m.score_rival %}Victoria{% elif m.score_own < m.score_rival %}Derrota{% else %}Empate{% endif %}
+              </div>
             </div>
           </div>
-        </div>
-      </a>
+        </a>
+        <button onclick="document.getElementById('del-{{ m.id }}').showModal()"
+                class="btn btn-ghost btn-sm text-error px-3 mr-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4h6v3M3 7h18"/>
+          </svg>
+        </button>
+        <dialog id="del-{{ m.id }}" class="modal">
+          <div class="modal-box">
+            <h3 class="font-bold text-lg">Borrar partido</h3>
+            <p class="py-4">¿Seguro que querés borrar <strong>vs {{ m.rival }}</strong> ({{ m.date }})?<br>
+              <span class="text-sm text-base-content/60">Se revertirán todas las métricas de los jugadores.</span>
+            </p>
+            <div class="modal-action">
+              <form method="dialog"><button class="btn">Cancelar</button></form>
+              <form action="/stats/matches/{{ m.id }}/delete" method="post">
+                <button type="submit" class="btn btn-error">Borrar</button>
+              </form>
+            </div>
+          </div>
+          <form method="dialog" class="modal-backdrop"><button>close</button></form>
+        </dialog>
+      </div>
       {% endfor %}
     </div>
 

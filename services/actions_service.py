@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from constants import PLAYER_STAT_BY_TYPE, PLAYER_STAT_BY_TYPE_AND_RESULT, SCORE_DELTA, VALID_ACTIONS
-from models import Event, Substitution
+from models import Event, MatchPlayer, Substitution
 from repositories import match_player_repo, match_repo, player_repo
 from services.match_utils import get_active_players, get_recent_events
 from utils.match_utils import calculate_minute
@@ -202,6 +202,39 @@ def delete_event(db: Session, match_id: str, event_id: str) -> tuple:
     db.commit()
     db.refresh(match)
     return match, get_recent_events(match_id, db)
+
+
+def delete_match(db: Session, match_id: str) -> None:
+    """Delete a finished match and revert all player stats it contributed.
+
+    Only finished matches may be deleted. Reverts event-based stats and
+    games_played/minutes_played for every player who participated.
+    Raises 404 if match not found, 400 if match is not finished.
+    """
+    match = match_repo.get_or_404(db, match_id)
+    if match.status != "finished":
+        raise HTTPException(status_code=400, detail="Solo se pueden borrar partidos finalizados")
+
+    total_minutes = match.accumulated_time // 60000
+
+    for mp, player in match_player_repo.get_all_with_players(db, match_id):
+        if mp.minute_in < 0:
+            continue
+        minute_out = mp.minute_out if mp.minute_out is not None else total_minutes
+        player.games_played = max(0, player.games_played - 1)
+        player.minutes_played = max(0, player.minutes_played - max(0, minute_out - mp.minute_in))
+
+    for event in match.events:
+        if event.team == "own" and event.player_id:
+            player = player_repo.get_by_id(db, event.player_id)
+            if player:
+                _apply_player_stats(player, event.type, event.result, delta=-1)
+
+    db.query(Event).filter_by(match_id=match_id).delete()
+    db.query(Substitution).filter_by(match_id=match_id).delete()
+    db.query(MatchPlayer).filter_by(match_id=match_id).delete()
+    db.delete(match)
+    db.commit()
 
 
 def close_match(db: Session, match_id: str) -> str:
