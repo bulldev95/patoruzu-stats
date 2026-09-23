@@ -273,3 +273,144 @@ class TestPlayerDetail:
         response = client.get(f"/stats/players/{player.id}")
         assert response.status_code == 200
         assert "Otro Club" in response.text
+
+
+class TestDeleteMatch:
+    def _finished_match_with_player(self, db, tries=0, tackles=0, games=1, minutes=80):
+        player = Player(
+            id=str(uuid.uuid4()),
+            personal_id=str(uuid.uuid4())[:8],
+            surname="Del",
+            name="Partido",
+            games_played=games,
+            minutes_played=minutes,
+            tries=tries,
+            tackles_total=tackles,
+            tackles_positive=tackles,
+        )
+        db.add(player)
+        db.flush()
+        match = Match(
+            id=str(uuid.uuid4()),
+            date="2026-08-01",
+            rival="Rival Test",
+            competition="Liga",
+            status="finished",
+            accumulated_time=4800000,
+        )
+        db.add(match)
+        db.flush()
+        db.add(MatchPlayer(
+            match_id=match.id,
+            player_id=player.id,
+            number=1,
+            is_starter=True,
+            minute_in=0,
+        ))
+        db.commit()
+        return match, player
+
+    def test_redirects_to_team_stats(self, client, db):
+        match, _ = self._finished_match_with_player(db)
+        response = client.post(f"/stats/matches/{match.id}/delete", follow_redirects=False)
+        assert response.status_code == 303
+        assert response.headers["location"] == "/stats/team"
+
+    def test_match_is_deleted(self, client, db):
+        match, _ = self._finished_match_with_player(db)
+        client.post(f"/stats/matches/{match.id}/delete")
+        assert db.query(Match).filter_by(id=match.id).first() is None
+
+    def test_reverts_games_played(self, client, db):
+        match, player = self._finished_match_with_player(db, games=3, minutes=240)
+        client.post(f"/stats/matches/{match.id}/delete")
+        db.refresh(player)
+        assert player.games_played == 2
+
+    def test_reverts_minutes_played(self, client, db):
+        match, player = self._finished_match_with_player(db, games=1, minutes=80)
+        client.post(f"/stats/matches/{match.id}/delete")
+        db.refresh(player)
+        assert player.minutes_played == 0
+
+    def test_reverts_event_stats(self, client, db):
+        match, player = self._finished_match_with_player(db, tries=2)
+        db.add(Event(
+            match_id=match.id, minute=10, period=1,
+            team="own", type="try", result="any", player_id=player.id,
+        ))
+        db.commit()
+        client.post(f"/stats/matches/{match.id}/delete")
+        db.refresh(player)
+        assert player.tries == 1
+
+    def test_rival_events_do_not_affect_player_stats(self, client, db):
+        match, player = self._finished_match_with_player(db, tries=1)
+        db.add(Event(
+            match_id=match.id, minute=5, period=1,
+            team="rival", type="try", result="any", player_id=player.id,
+        ))
+        db.commit()
+        client.post(f"/stats/matches/{match.id}/delete")
+        db.refresh(player)
+        assert player.tries == 1
+
+    def test_bench_player_not_deducted(self, client, db):
+        player = Player(
+            id=str(uuid.uuid4()),
+            personal_id=str(uuid.uuid4())[:8],
+            surname="Banco",
+            name="NoJugo",
+            games_played=1,
+            minutes_played=50,
+        )
+        db.add(player)
+        db.flush()
+        match = Match(
+            id=str(uuid.uuid4()),
+            date="2026-08-01",
+            rival="Rival",
+            competition="Liga",
+            status="finished",
+            accumulated_time=4800000,
+        )
+        db.add(match)
+        db.flush()
+        db.add(MatchPlayer(
+            match_id=match.id, player_id=player.id,
+            number=20, is_starter=False, minute_in=-1,
+        ))
+        db.commit()
+        client.post(f"/stats/matches/{match.id}/delete")
+        db.refresh(player)
+        assert player.games_played == 1
+        assert player.minutes_played == 50
+
+    def test_404_for_unknown_match(self, client, db):
+        response = client.post("/stats/matches/nonexistent/delete")
+        assert response.status_code == 404
+
+    def test_400_for_non_finished_match(self, client, db):
+        match = Match(
+            id=str(uuid.uuid4()),
+            date="2026-09-01",
+            rival="En Vivo",
+            competition="Liga",
+            status="live",
+            accumulated_time=0,
+        )
+        db.add(match)
+        db.commit()
+        response = client.post(f"/stats/matches/{match.id}/delete")
+        assert response.status_code == 400
+
+    def test_cascades_delete_events_and_match_players(self, client, db):
+        match, player = self._finished_match_with_player(db)
+        db.add(Event(
+            match_id=match.id, minute=5, period=1,
+            team="own", type="tackle", result="positive", player_id=player.id,
+        ))
+        db.commit()
+        client.post(f"/stats/matches/{match.id}/delete")
+        assert db.query(Event).filter_by(match_id=match.id).count() == 0
+        assert db.query(MatchPlayer).filter_by(match_id=match.id).count() == 0
